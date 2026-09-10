@@ -352,3 +352,171 @@ html.lenis, html.lenis body { height: auto; }
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(202, 31, 61, 0.4), rgba(255, 190, 0, 0.4), transparent);
 }
+
+/* ================================================
+   NEON TUBE SYSTEM (Gas Discharge & Luminous Conduits)
+   ================================================ */
+
+.neon-tube-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.neon-tube-rail {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: #FFFFFF;
+  border-radius: 999px;
+  box-shadow: 
+    0 0 3px #FFFFFF,
+    0 0 10px var(--secondary-glow),
+    0 0 24px var(--primary-glow),
+    0 0 45px rgba(202, 31, 61, 0.65);
+  transition: all 0.3s ease;
+}
+
+.neon-tube-rail::before,
+.neon-tube-rail::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 10px;
+  background: #140d1a;
+  border: 1.5px solid rgba(255, 190, 0, 0.8);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 190, 0, 0.5);
+}
+
+.neon-tube-rail::before { left: -4px; }
+.neon-tube-rail::after { right: -4px; }
+
+/* Pulsing Neon Effect */
+.neon-pulse {
+  animation: neonHum 4s ease-in-out infinite alternate;
+}
+
+@keyframes neonHum {
+  0%, 100% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 5px var(--primary-glow)) drop-shadow(0 0 14px var(--secondary-glow));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 9px var(--primary-glow)) drop-shadow(0 0 24px var(--secondary-glow)) drop-shadow(0 0 40px rgba(202, 31, 61, 0.5));
+  }
+  75% {
+    opacity: 0.86;
+  }
+}
+
+/* Neon Conduits in SVG */
+.neon-path-core {
+  stroke: #ffffff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.neon-path-glow-amber {
+  stroke: var(--secondary-glow);
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 8px var(--secondary-glow)) drop-shadow(0 0 20px rgba(255, 190, 0, 0.65));
+}
+
+.neon-path-glow-crimson {
+  stroke: var(--primary-glow);
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 8px var(--primary-glow)) drop-shadow(0 0 22px rgba(202, 31, 61, 0.65));
+}
+
+/* ================================================
+   TOPOGRAPHIC CONTOUR LAYER (Isolines & Manifolds)
+   ================================================ */
+
+.topographic-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.contour-line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.contour-line-accent {
+  stroke: rgba(255, 190, 0, 0.22);
+  stroke-dasharray: 4 6;
+}
+
+.contour-line-crimson {
+  stroke: rgba(202, 31, 61, 0.22);
+}
+
+.contour-label {
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  fill: rgba(255, 255, 255, 0.35);
+  dominant-baseline: central;
+}
+
+/* ================================================
+   HALFTONE TEXTURE MATRIX (Tactile Micro-Contrast)
+   ================================================ */
+
+.halftone-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.14) 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
+  background-position: 0 0;
+  opacity: 0.45;
+  mask-image: radial-gradient(ellipse 85% 65% at 50% 30%, black 20%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 30%, black 20%, transparent 85%);
+  mix-blend-mode: screen;
+}
+
+.halftone-accent-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 190, 0, 0.18) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse 55% 45% at 85% 25%, black 10%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 55% 45% at 85% 25%, black 10%, transparent 75%);
+}
+
+.halftone-card-surface {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 12px 12px;
+  opacity: 0.5;
+  pointer-events: none;
+  mask-image: linear-gradient(135deg, black 0%, transparent 60%);
+  -webkit-mask-image: linear-gradient(135deg, black 0%, transparent 60%);
+}
+

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence, useMotionValue, useSpring, type Variants } from 'framer-motion'
 import Lenis from 'lenis'
 
@@ -188,8 +189,208 @@ function SpotlightCard({
   const Comp = Tag as 'div'
   return (
     <Comp ref={ref} onMouseMove={onMove} className={`premium-card premium-card-spot ${className}`}>
+      <div className="halftone-card-surface" aria-hidden="true" />
       {children}
     </Comp>
+  )
+}
+
+function TopographicContourLayer() {
+  return (
+    <svg
+      className="topographic-layer"
+      viewBox="0 0 1600 1000"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="topo-grad-ambient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255, 190, 0, 0.22)" />
+          <stop offset="50%" stopColor="rgba(255, 255, 255, 0.08)" />
+          <stop offset="100%" stopColor="rgba(202, 31, 61, 0.22)" />
+        </linearGradient>
+      </defs>
+
+      {/* Sweeping Contour Ridges (Elevation Flows) */}
+      <g className="contour-group opacity-70">
+        <path
+          d="M -60 380 C 320 450, 680 290, 930 430 C 1140 540, 1370 690, 1680 600"
+          className="contour-line"
+        />
+        <path
+          d="M -60 440 C 310 510, 670 350, 920 490 C 1130 600, 1360 750, 1680 660"
+          className="contour-line contour-line-accent"
+        />
+        <path
+          d="M -60 500 C 300 570, 660 410, 910 550 C 1120 660, 1350 810, 1680 720"
+          className="contour-line"
+        />
+        <path
+          d="M -60 560 C 290 630, 650 470, 900 610 C 1110 720, 1340 870, 1680 780"
+          className="contour-line contour-line-crimson"
+        />
+        <path
+          d="M -60 620 C 280 690, 640 530, 890 670 C 1100 780, 1330 930, 1680 840"
+          className="contour-line"
+        />
+      </g>
+
+      {/* Concentric Elevation Basin (Top Right Manifold) */}
+      <g className="contour-manifold-1 opacity-80">
+        <path
+          d="M 1220 180 C 1330 180, 1400 230, 1390 320 C 1380 410, 1290 440, 1220 440 C 1130 440, 1070 390, 1080 310 C 1090 230, 1140 180, 1220 180 Z"
+          className="contour-line"
+        />
+        <path
+          d="M 1220 140 C 1370 140, 1450 210, 1440 330 C 1430 450, 1320 480, 1220 480 C 1100 480, 1020 420, 1030 310 C 1040 200, 1110 140, 1220 140 Z"
+          className="contour-line contour-line-accent"
+        />
+        <path
+          d="M 1220 100 C 1410 100, 1510 190, 1500 350 C 1480 500, 1350 530, 1220 530 C 1060 530, 970 450, 980 310 C 990 170, 1080 100, 1220 100 Z"
+          className="contour-line"
+        />
+        <path
+          d="M 1220 60 C 1450 60, 1570 170, 1560 370 C 1540 550, 1380 580, 1220 580 C 1020 580, 920 480, 930 310 C 940 140, 1050 60, 1220 60 Z"
+          className="contour-line contour-line-crimson"
+        />
+      </g>
+
+      {/* Elevation Basin (Lower Left Manifold) */}
+      <g className="contour-manifold-2 opacity-80">
+        <path
+          d="M 320 640 C 410 630, 470 680, 460 760 C 450 830, 390 870, 310 860 C 240 850, 190 800, 200 730 C 210 660, 250 640, 320 640 Z"
+          className="contour-line"
+        />
+        <path
+          d="M 330 590 C 450 580, 530 650, 510 770 C 490 880, 410 930, 300 920 C 200 910, 140 840, 150 740 C 160 640, 220 590, 330 590 Z"
+          className="contour-line contour-line-accent"
+        />
+        <path
+          d="M 340 530 C 500 520, 600 610, 570 780 C 540 940, 430 990, 280 980 C 140 970, 70 880, 90 740 C 110 610, 190 530, 340 530 Z"
+          className="contour-line"
+        />
+      </g>
+
+      {/* Cartographic / Algorithmic Labels */}
+      <text x="1395" y="325" className="contour-label">∇_θ LOSS 0.82</text>
+      <text x="1060" y="315" className="contour-label">ISO/IEC 42001</text>
+      <text x="515" y="765" className="contour-label">LATENT_Z: 4096</text>
+      <text x="925" y="495" className="contour-label">+32GB VRAM</text>
+      <text x="680" y="355" className="contour-label">AIR-GAPPED LOCAL</text>
+    </svg>
+  )
+}
+
+function HalftoneTextureLayer() {
+  return (
+    <>
+      <div className="halftone-layer" aria-hidden="true" />
+      <div className="halftone-accent-layer" aria-hidden="true" />
+    </>
+  )
+}
+
+function NeonTubeRail({ className = '', glow = 'mixed' }: { className?: string; glow?: 'amber' | 'crimson' | 'mixed' }) {
+  return (
+    <div className={`relative w-full max-w-7xl mx-auto px-6 md:px-10 py-8 my-2 flex items-center justify-center overflow-hidden z-10 ${className}`}>
+      <div className="w-full relative flex items-center">
+        {/* Left Anode Cap */}
+        <div className="w-3 h-3.5 bg-[#140d1a] border border-[#FFBE00]/80 rounded-[2px] shrink-0 shadow-[0_0_8px_rgba(255,190,0,0.5)] z-20" />
+        
+        {/* Neon Tube Rail */}
+        <div className="relative flex-1 h-[3px] mx-1">
+          {/* Intense Outer Plasma Bloom */}
+          <div 
+            className="absolute -inset-y-1.5 inset-x-0 rounded-full blur-[10px] opacity-80 neon-pulse"
+            style={{
+              background: glow === 'amber' 
+                ? 'var(--secondary-glow)'
+                : glow === 'crimson'
+                ? 'var(--primary-glow)'
+                : 'linear-gradient(90deg, var(--primary-glow) 0%, var(--secondary-glow) 50%, var(--primary-glow) 100%)'
+            }}
+          />
+          {/* Gas Sheath */}
+          <div 
+            className="absolute inset-0 rounded-full blur-[3px]"
+            style={{
+              background: glow === 'amber'
+                ? '#FFBE00'
+                : glow === 'crimson'
+                ? '#CA1F3D'
+                : 'linear-gradient(90deg, #CA1F3D 0%, #FFBE00 50%, #CA1F3D 100%)'
+            }}
+          />
+          {/* White Incandescent Core */}
+          <div className="relative w-full h-full bg-white rounded-full shadow-[0_0_4px_#fff,0_0_12px_var(--secondary-glow)] z-10" />
+        </div>
+
+        {/* Right Cathode Cap */}
+        <div className="w-3 h-3.5 bg-[#140d1a] border border-[#CA1F3D]/80 rounded-[2px] shrink-0 shadow-[0_0_8px_rgba(202,31,61,0.5)] z-20" />
+      </div>
+    </div>
+  )
+}
+
+function NeonConduitAccent() {
+  return (
+    <svg
+      className="absolute -top-10 -right-8 w-[280px] h-[280px] md:w-[420px] md:h-[420px] pointer-events-none opacity-85 z-0 neon-pulse"
+      viewBox="0 0 400 400"
+      fill="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <filter id="neon-conduit-bloom" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="6" result="blur1" />
+          <feGaussianBlur stdDeviation="16" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <linearGradient id="neon-conduit-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#CA1F3D" />
+          <stop offset="50%" stopColor="#FFBE00" />
+          <stop offset="100%" stopColor="#CA1F3D" />
+        </linearGradient>
+      </defs>
+      
+      {/* Outer gas bloom */}
+      <path
+        d="M 30 360 C 110 240, 210 190, 370 60"
+        stroke="url(#neon-conduit-grad)"
+        strokeWidth="10"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.3"
+        filter="url(#neon-conduit-bloom)"
+      />
+      {/* Saturated gas sheath */}
+      <path
+        d="M 30 360 C 110 240, 210 190, 370 60"
+        stroke="url(#neon-conduit-grad)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.9"
+      />
+      {/* Hot white filament core */}
+      <path
+        d="M 30 360 C 110 240, 210 190, 370 60"
+        stroke="#FFFFFF"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      
+      {/* Terminal electrodes */}
+      <circle cx="30" cy="360" r="4.5" fill="#140d1a" stroke="#CA1F3D" strokeWidth="2" />
+      <circle cx="370" cy="60" r="4.5" fill="#140d1a" stroke="#FFBE00" strokeWidth="2" />
+      <circle cx="30" cy="360" r="1.5" fill="#FFFFFF" />
+      <circle cx="370" cy="60" r="1.5" fill="#FFFFFF" />
+    </svg>
   )
 }
 
@@ -251,12 +452,13 @@ function CustomCursor() {
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return
-    setEnabled(true)
+    const frame = requestAnimationFrame(() => setEnabled(true))
     const onMove = (e: MouseEvent) => { dotX.set(e.clientX); dotY.set(e.clientY) }
     const onOver = (e: MouseEvent) => setHovering(!!(e.target as HTMLElement).closest('a, button'))
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseover', onOver)
     return () => {
+      cancelAnimationFrame(frame)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseover', onOver)
     }
@@ -368,8 +570,10 @@ function HeroSection() {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="relative"
         >
-          <div className="modern-console p-6">
+          <NeonConduitAccent />
+          <div className="modern-console p-6 relative z-10">
             <div className="flex items-center gap-2 mb-4 text-[11px] text-[var(--text-muted)]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
@@ -422,10 +626,13 @@ function BrandEntitySection() {
           WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)',
         }}
       >
-        <img
+        <Image
           src="/images/entidad-algoritmica.png"
           alt="Entidad algorítmica — representación visual del Branding de Algoritmo"
-          className="w-full h-full object-cover"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover"
           style={{ objectPosition: '50% 30%' }}
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,5,10,0.05) 0%, rgba(7,5,10,0.55) 75%, rgba(7,5,10,0.92) 100%)' }} />
@@ -828,6 +1035,8 @@ export default function Home() {
     <main className="relative">
       <CustomCursor />
       <div className="ambient-background">
+        <TopographicContourLayer />
+        <HalftoneTextureLayer />
         <NeuralMeshBackground />
         <CodeStreamLayer />
         <div className="ambient-blob blob-1" />
@@ -839,12 +1048,16 @@ export default function Home() {
       <NavBar />
 
       <HeroSection />
+      <NeonTubeRail glow="mixed" />
       <BrandEntitySection />
       <ProblemSection />
+      <NeonTubeRail glow="amber" />
       <MethodologySection />
       <InfrastructureSection />
+      <NeonTubeRail glow="crimson" />
       <ArchitecturePlansSection />
       <ServicesConsole />
+      <NeonTubeRail glow="mixed" />
       <ContactSection />
       <Footer />
     </main>
