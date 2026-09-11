@@ -490,12 +490,12 @@ function TagPills({ tags }: { tags: string }) {
 // ============================================================
 
 const NAV_LINKS = [
-  { href: '#problema', label: 'El Problema' },
+  { href: '#pilares', label: 'Pilares' },
   { href: '#metodologia', label: 'Metodología' },
-  { href: '#infra', label: 'Infraestructura' },
-  { href: '#arquitectura', label: 'Arquitectura' },
-  { href: '#servicios', label: 'Servicios' },
+  { href: '#infra', label: 'Cómputo Local' },
   { href: '#portafolio', label: 'Portafolio' },
+  { href: '#digest', label: 'Investigación' },
+  { href: '#podcast', label: 'Podcast' },
 ]
 
 function NavBar() {
@@ -510,13 +510,13 @@ function NavBar() {
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 transition-all duration-300"
       style={{
         height: scrolled ? '64px' : '84px',
-        background: scrolled ? 'rgba(5,5,5,0.7)' : 'transparent',
+        background: scrolled ? 'rgba(8,9,12,0.85)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
         borderBottom: scrolled ? '1px solid var(--surface-border)' : '1px solid transparent',
       }}
     >
       <a href="#hero" className="flex items-center gap-3 no-underline">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))' }}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary-glow), var(--accent-lime))' }}>
           <span className="text-black font-bold text-xs">S</span>
         </div>
         <span className="font-bold text-[var(--text-main)] text-sm tracking-wide">SOLUCIONES DE IA</span>
@@ -539,26 +539,32 @@ function NavBar() {
 
 function HeroSection() {
   return (
-    <section id="hero" className="relative z-10 min-h-screen flex items-center px-6 md:px-10 pt-28">
-      <div className="max-w-7xl mx-auto w-full grid md:grid-cols-[1.15fr_0.85fr] gap-16 items-center">
+    <section id="hero" className="relative z-10 min-h-screen flex flex-col justify-center px-6 md:px-10 pt-28 pb-12">
+      <div className="max-w-7xl mx-auto w-full grid md:grid-cols-[1.15fr_0.85fr] gap-12 lg:gap-16 items-center">
         <motion.div initial="hidden" animate="visible" variants={staggerParent} className="space-y-8">
-          <motion.div variants={fadeUp} className="glass-pill">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--secondary-glow)] animate-pulse" />
-            Marco NIST &amp; ISO 42001 Integrados
+          <motion.div variants={fadeUp} className="glass-pill border border-[var(--accent-lime)]/30 text-[var(--text-main)]">
+            <span className="w-2 h-2 rounded-full bg-[var(--accent-lime)] animate-pulse" />
+            <span className="font-mono text-xs tracking-wider text-[var(--accent-lime)]">● THINK TANK APLICADO</span>
+            <span className="text-white/40">|</span>
+            <span className="text-xs">ALTA DIRECCIÓN &amp; CÓMPUTO SOBERANO</span>
           </motion.div>
-          <motion.h1 variants={fadeUp} className="font-bold tracking-tighter leading-none text-[clamp(3rem,8vw,7rem)]">
-            <span className="block title-gradient">Sastrería</span>
-            <span className="block text-accent-gradient">Algorítmica.</span>
+          <motion.h1 variants={fadeUp} className="font-bold tracking-tighter leading-[0.95] text-[clamp(2.75rem,7.5vw,6.5rem)]">
+            <span className="block title-gradient">Inteligencia Artificial.</span>
+            <span className="block text-accent-gradient">Sentido, Control &amp; Cómputo.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="text-[var(--text-muted)] text-lg max-w-2xl leading-relaxed">
-            Construimos la inteligencia de su compañía desde cero — sin dependencias externas, sin fuga de datos. Memoria, identidad y gobernanza de IA ejecutándose en infraestructura local de élite (RTX 5090).
+            Laboratorio de pensamiento y consultoría de alta dirección. Desarrollamos gobernanza activa, análisis epistemológico y arquitecturas de IA Local-First ejecutadas en cómputo soberano de élite (RTX 5090 · 32 GB VRAM) sin fuga de datos.
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
-            <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary>Agendar Diagnóstico →</MagneticButton>
-            <MagneticButton href="#infra">Ver Arquitectura</MagneticButton>
+            <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary className="!px-7 !py-3.5 text-xs uppercase tracking-wider font-bold">
+              Iniciar Auditoría Ejecutiva →
+            </MagneticButton>
+            <MagneticButton href="#pilares" className="!px-7 !py-3.5 text-xs uppercase tracking-wider">
+              Explorar 4 Pilares ↓
+            </MagneticButton>
           </motion.div>
           <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 pt-6 border-t border-white/5 max-w-md">
-            {[{ v: 6, l: 'Servicios' }, { v: 3, l: 'Marcos Reg.' }, { v: 0, l: 'Bytes Fuera' }].map((s) => (
+            {[{ v: 4, l: 'Pilares Centrales' }, { v: 100, l: '% Local-First' }, { v: 0, l: 'Bytes Expuestos' }].map((s) => (
               <div key={s.l}>
                 <div className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight text-[var(--text-main)] leading-none"><AnimatedCounter target={s.v} /></div>
                 <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">{s.l}</div>
@@ -579,26 +585,200 @@ function HeroSection() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-              <span className="ml-2">branding_algoritmo.py</span>
+              <span className="ml-2 font-mono text-[var(--text-dim)]">epistemic_runtime_audit.sh</span>
             </div>
-            <div className="space-y-1.5 text-[13px]">
+            <div className="space-y-2 text-[13px] font-mono">
               {[
-                { t: '$ init_brand_algorithm --client=corp', c: 'text-[var(--primary-glow)]' },
-                { t: '> brand_voice ............ EXTRAÍDO', c: 'text-[var(--text-muted)]' },
-                { t: '> cultura_org ............ MAPEADA', c: 'text-[var(--text-muted)]' },
-                { t: '> fine_tuning: EPOCH 3/3 loss 0.82', c: 'text-[var(--secondary-glow)]' },
-                { t: '> BRANDING_ALGORITMO: COMPLETADO', c: 'text-[var(--text-main)] font-bold' },
-                { t: '  MARCA_ALINEADA ██████████ 99.8%', c: 'text-[var(--tertiary-glow)]' },
+                { t: '$ execute_epistemic_audit --target=corp_ai', c: 'text-[var(--accent-cyan)] font-bold' },
+                { t: '> hermeneutic_audit ..... ALINEACIÓN ACTIVA', c: 'text-[var(--text-muted)]' },
+                { t: '> cognitive_ergonomics ... AGENCIA PRESERVADA', c: 'text-[var(--text-muted)]' },
+                { t: '> talent_displacement ... 0% PÉRDIDA VALOR', c: 'text-[var(--accent-lime)]' },
+                { t: '> runtime_firewall ....... CÓMPUTO LOCAL RTX5090', c: 'text-[var(--text-main)] font-bold' },
+                { t: '  SOVEREIGNTY_SCORE ██████████ 100.0%', c: 'text-[var(--accent-cyan)] font-bold' },
               ].map((l, i) => <div key={i} className={l.c}>{l.t}</div>)}
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-5">
-            <span className="glass-pill">RTX 5090 · 32 GB VRAM</span>
-            <span className="glass-pill">192 GB RAM</span>
-            <span className="glass-pill">LLaMA · Mistral · Qwen</span>
+            <span className="glass-pill font-mono text-xs">RTX 5090 · 32 GB VRAM</span>
+            <span className="glass-pill font-mono text-xs">Cómputo Soberano</span>
+            <span className="glass-pill font-mono text-xs">ISO 42001 · EU AI Act</span>
           </div>
         </motion.div>
       </div>
+
+      {/* KINETIC MARQUEE BANNER — EL GRAN MANIFIESTO */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="mt-16 w-full overflow-hidden border-y border-white/10 bg-black/40 py-3.5 backdrop-blur-md"
+      >
+        <div className="flex w-max animate-marquee space-x-12">
+          {[0, 1].map((copyIdx) => (
+            <div key={copyIdx} className="flex items-center space-x-8 text-xs md:text-sm tracking-wide font-mono text-[var(--text-muted)] shrink-0">
+              <span className="text-[var(--accent-lime)] font-bold tracking-wider">⚡ MANIFIESTO EJECUTIVO:</span>
+              <span className="text-white font-medium">
+                «La Inteligencia Artificial no es solo un problema de ingeniería de software: es una crisis de sentido, una mutación de la experiencia humana, una reconfiguración del valor del trabajo y un desafío crítico de control.»
+              </span>
+              <span className="text-[var(--accent-cyan)]">●</span>
+              <span className="text-[var(--text-dim)] uppercase tracking-widest text-[11px]">SOLUCIONES DE IA · APPLIED THINK TANK &amp; EXECUTIVE ADVISORY</span>
+              <span className="text-[var(--accent-crimson)] font-bold">■</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================================
+// FOUR PILLARS — EL ENFOQUE TETRAÉDRICO
+// ============================================================
+
+interface Pillar {
+  id: string
+  number: string
+  title: string
+  subtitle: string
+  badge: string
+  accentColor: string
+  accentBorder: string
+  summary: string
+  bullets: string[]
+  metrics: { label: string; value: string }
+}
+
+const PILLARS_DATA: Pillar[] = [
+  {
+    id: 'pilar-01',
+    number: '01',
+    title: 'Hermenéutica Computacional',
+    subtitle: 'Epistemología & Semántica Algorítmica',
+    badge: 'Significado vs. Tokens',
+    accentColor: 'text-[var(--accent-cyan)]',
+    accentBorder: 'hover:border-[var(--accent-cyan)]/50',
+    summary: 'Auditoría de significado profundo frente al mero cálculo estadístico probabilístico de tokens. Superamos la alucinación a través de modelos de contexto pragmático y alineación hermenéutica estricta.',
+    bullets: [
+      'Eliminación de alucinaciones críticas mediante anclaje contextual pragmático.',
+      'Alineación hermenéutica con el marco de significados y vocabulario de la empresa.',
+      'Sistemas RAG contextuales con verificación de coherencia semántica en código.',
+    ],
+    metrics: { label: 'Rigor Semántico', value: '100% Determinista' },
+  },
+  {
+    id: 'pilar-02',
+    number: '02',
+    title: 'Fenomenología de la Adopción',
+    subtitle: 'Experiencia Humana & Cognición',
+    badge: 'Humano-Algoritmo',
+    accentColor: 'text-[var(--accent-lime)]',
+    accentBorder: 'hover:border-[var(--accent-lime)]/50',
+    summary: 'Diagnóstico vivencial y fenomenológico de la relación entre el profesional y el agente de IA. Diseñamos interfaces y dinámicas cognitivas que enriquecen la agencia humana en lugar de alienarla.',
+    bullets: [
+      'Ergonomía cognitiva aplicada: prevención del agotamiento y sobrecarga mental.',
+      'Prevención de la alienación laboral y preservación activa del criterio humano.',
+      'Diseño de interfaces simbióticas calibradas para toma de decisiones asistida.',
+    ],
+    metrics: { label: 'Agencia Humana', value: 'Preservación Activa' },
+  },
+  {
+    id: 'pilar-03',
+    number: '03',
+    title: 'Dinámica Laboral & Talento',
+    subtitle: 'Economía del Trabajo & Skills Gap',
+    badge: 'Reconfiguración del Valor',
+    accentColor: 'text-[var(--primary-glow)]',
+    accentBorder: 'hover:border-[var(--primary-glow)]/50',
+    summary: 'Monitoreo dinámico de oferta y demanda de habilidades ante la disrupción algorítmica. Identificamos competencias en depreciación frente a la prima de valor emergente: juicio directivo e intuición crítica.',
+    bullets: [
+      'Mapeo de habilidades en riesgo vs. primas de valor emergentes en su industria.',
+      'Rediseño de flujos departamentales sin destrucción traumática de capital humano.',
+      'Formación directiva en supervisión, juicio epistemológico y orquestación de agentes.',
+    ],
+    metrics: { label: 'Capital Humano', value: 'Criterio & Valor' },
+  },
+  {
+    id: 'pilar-04',
+    number: '04',
+    title: 'Gobernanza Activa & Runtime Security',
+    subtitle: 'Control en Código & Soberanía',
+    badge: 'Zero-Leakage & Local-First',
+    accentColor: 'text-[var(--accent-crimson)]',
+    accentBorder: 'hover:border-[var(--accent-crimson)]/50',
+    summary: 'Transición radical del «compliance en papel» a cortafuegos de ejecución deterministas en tiempo real. Mitigación activa de fugas, control estricto de agencia y despliegue en hardware local de élite (RTX 5090).',
+    bullets: [
+      'Cortafuegos deterministas de runtime y prevención activa de fugas de datos.',
+      'Límites programáticos en código a la autonomía y rango de acción de los agentes.',
+      'Soberanía absoluta: cómputo Local-First en GPU local (RTX 5090 · 32 GB VRAM).',
+    ],
+    metrics: { label: 'Soberanía Operativa', value: 'Local-First RTX 5090' },
+  },
+]
+
+function FourPillarsSection() {
+  return (
+    <section id="pilares" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-3xl mx-auto">
+        <span className="sec-label">{"// MODELO DE INTERVENCIÓN // EL ENFOQUE TETRAÉDRICO"}</span>
+        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
+          Los 4 Pilares de <span className="text-accent-gradient">Intervención Ejecutiva</span>
+        </h2>
+        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
+          Una respuesta holística a la transformación algorítmica. Desafiamos la visión reduccionista de la IA como mero software para articular un modelo de alto impacto en 4 dimensiones críticas de la organización.
+        </p>
+      </motion.div>
+
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {PILLARS_DATA.map((pillar) => (
+          <motion.div key={pillar.id} variants={fadeUp} className="h-full">
+            <SpotlightCard className={`p-8 h-full flex flex-col justify-between border border-white/10 transition-all duration-300 ${pillar.accentBorder}`}>
+              <div>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight ${pillar.accentColor}`}>
+                      {pillar.number}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-muted)]">
+                      {pillar.badge}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] block">{pillar.metrics.label}</span>
+                    <span className={`text-xs font-mono font-bold ${pillar.accentColor}`}>{pillar.metrics.value}</span>
+                  </div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-1 tracking-tight">
+                  {pillar.title}
+                </h3>
+                <div className="text-xs font-mono text-[var(--text-muted)] mb-5">
+                  {pillar.subtitle}
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6">
+                  {pillar.summary}
+                </p>
+
+                <div className="space-y-2.5 pt-4 border-t border-white/10">
+                  {pillar.bullets.map((b, idx) => (
+                    <div key={idx} className="flex items-start gap-2.5 text-xs text-[var(--text-main)]">
+                      <span className={`${pillar.accentColor} font-bold mt-0.5`}>▸</span>
+                      <span>{b}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between text-xs font-mono text-[var(--text-dim)]">
+                <span>INTERVENCIÓN_0{pillar.number}</span>
+                <span className="text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1">
+                  Protocolo Activo <span className={`${pillar.accentColor}`}>●</span>
+                </span>
+              </div>
+            </SpotlightCard>
+          </motion.div>
+        ))}
+      </motion.div>
     </section>
   )
 }
@@ -1183,6 +1363,212 @@ function PortfolioSection() {
 }
 
 // ============================================================
+// SUBSTACK DIGEST SECTION — LAB DE INVESTIGACIÓN
+// ============================================================
+
+function SubstackDigestSection() {
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+    window.open(`https://runtimegovernance.substack.com/subscribe?email=${encodeURIComponent(email)}`, '_blank')
+    setSubmitted(true)
+  }
+
+  return (
+    <section id="digest" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-3xl mx-auto">
+        <span className="sec-label">{"// LAB DE INVESTIGACIÓN // RUNTIME GOVERNANCE DIGEST"}</span>
+        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
+          Runtime Governance Digest: <span className="text-accent-gradient">Laboratorio &amp; Ensayos</span>
+        </h2>
+        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
+          Nuestras reflexiones semanales, análisis técnicos y tesis epistemológicas sobre el impacto real de la Inteligencia Artificial en la alta dirección, el derecho y la sociedad.
+        </p>
+      </motion.div>
+
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Featured Essay Card (8 cols) */}
+        <motion.div variants={fadeUp} className="lg:col-span-8">
+          <SpotlightCard className="p-8 md:p-10 h-full flex flex-col justify-between border border-white/10 hover:border-[var(--accent-lime)]/40 transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(circle,rgba(212,255,0,0.08)_0%,transparent_70%)] pointer-events-none" />
+
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[rgba(212,255,0,0.12)] border border-[rgba(212,255,0,0.3)] text-[var(--accent-lime)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-lime)] animate-pulse" />
+                  Ensayo Destacado · Laboratorio de Pensamiento
+                </span>
+                <span className="text-xs font-mono text-[var(--text-muted)]">Edición Especial · 8 min lectura</span>
+              </div>
+
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white mb-4 leading-tight group-hover:text-[var(--accent-lime)] transition-colors">
+                «La trampa del Compliance en papel: Por qué una certificación ISO 42001 no evita que tu IA colapse»
+              </h3>
+
+              <div className="mb-6">
+                <TagPills tags="[ISO 42001] [RUNTIME SECURITY] [EPISTEMOLOGÍA] [SOBERANÍA LOCAL] [ALTA DIRECCIÓN]" />
+              </div>
+
+              <p className="text-[var(--text-muted)] text-base sm:text-lg leading-relaxed mb-6">
+                Tener carpetas repletas de políticas redactadas por abogados y sellos de certificación no detiene una inyección de prompt ni una alucinación crítica en medio de una decisión estratégica. Desglosamos por qué la verdadera gobernanza de IA no reside en documentos PDF, sino en cortafuegos deterministas de runtime, control en código y soberanía estricta del cómputo local.
+              </p>
+            </div>
+
+            <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[var(--void-2)] border border-white/10 flex items-center justify-center font-bold text-sm text-[var(--accent-lime)]">
+                  ⚡
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-white leading-tight">Soluciones de IA Research</span>
+                  <span className="block text-[10px] font-mono text-[var(--text-dim)]">runtimegovernance.substack.com</span>
+                </div>
+              </div>
+
+              <a
+                href="https://runtimegovernance.substack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-phosphor text-xs no-underline inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold"
+              >
+                Leer Ensayo en Substack ↗
+              </a>
+            </div>
+          </SpotlightCard>
+        </motion.div>
+
+        {/* Direct Subscribe Card (4 cols) */}
+        <motion.div variants={fadeUp} className="lg:col-span-4">
+          <SpotlightCard className="p-8 h-full flex flex-col justify-between border border-white/10 bg-black/40">
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-[rgba(212,255,0,0.08)] border border-[rgba(212,255,0,0.25)] flex items-center justify-center text-xl text-[var(--accent-lime)] mb-6">
+                ✉
+              </div>
+              <h4 className="text-xl font-bold tracking-tight text-white mb-2">
+                Suscríbase al Digest Ejecutivo
+              </h4>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6">
+                Reciba quincenalmente nuestros análisis de vanguardia, marcos de gobernanza y desgloses de arquitectura de IA directamente en su correo.
+              </p>
+
+              <form onSubmit={handleSubscribe} className="space-y-3">
+                <div>
+                  <label htmlFor="digest-email" className="sr-only">Correo electrónico corporativo</label>
+                  <input
+                    id="digest-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="su.correo@empresa.com"
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[var(--accent-lime)] transition-colors font-mono"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full btn-phosphor !py-3 text-xs uppercase tracking-wider font-bold cursor-pointer"
+                >
+                  {submitted ? 'Redirigiendo a Substack...' : 'Suscribirme al Lab ↗'}
+                </button>
+              </form>
+            </div>
+
+            <div className="pt-6 mt-6 border-t border-white/5 text-[11px] font-mono text-[var(--text-dim)]">
+              🔒 Acceso abierto para directores, reguladores y tecnólogos. Cero spam.
+            </div>
+          </SpotlightCard>
+        </motion.div>
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================================
+// PODCAST BANNER SECTION — SINTAXIS & SENTIDO
+// ============================================================
+
+function PodcastBannerSection() {
+  return (
+    <section id="podcast" className="relative z-10 py-20 px-6 md:px-10 max-w-7xl mx-auto">
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp}>
+        <SpotlightCard className="p-8 md:p-12 border border-white/15 bg-[rgba(14,16,23,0.75)] relative overflow-hidden">
+          {/* Subtle audio waves background pattern */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-[radial-gradient(circle,rgba(0,71,255,0.12)_0%,transparent_70%)] pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            {/* Podcast Info (8 cols) */}
+            <div className="lg:col-span-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[rgba(0,71,255,0.15)] border border-[rgba(0,71,255,0.4)] text-[var(--accent-cyan)]">
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-pulse" />
+                  Podcast Semanal Ejecutivo
+                </span>
+                <span className="text-xs font-mono text-[var(--text-muted)]">Episodios de 10 minutos</span>
+              </div>
+
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight">
+                Sintaxis &amp; Sentido: <span className="text-accent-gradient">El Podcast Semanal de Soluciones de IA</span>
+              </h3>
+
+              <p className="text-base text-[var(--text-muted)] leading-relaxed max-w-2xl">
+                Episodios ejecutivos de 10 minutos analizando el cruce entre hermenéutica, mercado de trabajo y gobernanza de algoritmos. Sin rodeos técnicos innecesarios ni marketing superficial: análisis crítico y aplicable para directores y estrategas.
+              </p>
+
+              {/* Episode topics pills */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
+                  Ep. 01: La muerte del prompt y el renacer del criterio
+                </span>
+                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
+                  Ep. 02: ¿Quién responde cuando el agente delinque?
+                </span>
+                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
+                  Ep. 03: Soberanía de GPU vs. Nube Rentada
+                </span>
+              </div>
+            </div>
+
+            {/* CTA & Spotify Badge (4 cols) */}
+            <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center gap-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                {/* Visualizer audio bars animation */}
+                {[40, 75, 55, 90, 60, 80, 45, 95, 70, 50].map((h, i) => (
+                  <motion.span
+                    key={i}
+                    animate={{ height: ['8px', `${h * 0.4}px`, '8px'] }}
+                    transition={{ duration: 1.2 + (i % 3) * 0.2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-1 bg-[var(--accent-cyan)] rounded-full inline-block"
+                  />
+                ))}
+              </div>
+
+              <a
+                href="https://open.spotify.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(29,185,84,0.3)] hover:shadow-[0_0_30px_rgba(29,185,84,0.5)] no-underline"
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.498 17.306c-.218.358-.684.47-1.042.253-2.855-1.745-6.448-2.14-10.68-1.173-.41.094-.82-.16-.913-.57-.094-.41.16-.82.57-.913 4.63-1.056 8.604-.61 11.812 1.36.358.217.47.684.253 1.043zm1.464-3.26c-.274.444-.86.587-1.303.313-3.27-2.01-8.254-2.593-12.122-1.417-.5.152-1.03-.134-1.182-.635-.152-.5.134-1.03.635-1.182 4.417-1.34 9.91-.69 13.66 1.618.443.274.586.86.312 1.303zm.126-3.41c-3.92-2.327-10.38-2.542-14.126-1.405-.6.183-1.237-.16-1.42-.76-.182-.6.16-1.237.76-1.42 4.305-1.306 11.43-1.054 15.94 1.624.54.32.716 1.02.395 1.56-.32.54-1.02.716-1.56.395z"/>
+                </svg>
+                <span>Spotify for Creators ↗</span>
+              </a>
+
+              <span className="text-[10px] font-mono text-[var(--text-dim)]">
+                Disponible en todas las plataformas de podcast
+              </span>
+            </div>
+          </div>
+        </SpotlightCard>
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================================
 // CONTACT + FOOTER
 // ============================================================
 
@@ -1206,7 +1592,7 @@ function ContactSection() {
             <a key={c.label} href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="no-underline">
               <SpotlightCard className="p-5 text-left h-full">
                 <div className="text-2xl mb-2">{c.icon}</div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] mb-1">{c.label}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-lime)] mb-1">{c.label}</div>
                 <div className="text-[var(--text-muted)] text-sm">{c.val}</div>
               </SpotlightCard>
             </a>
@@ -1220,10 +1606,23 @@ function ContactSection() {
 function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/10 py-10 px-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto text-sm text-gray-500">
-      <p>© 2026 Soluciones de IA. Branding de Algoritmo™.</p>
-      <div className="flex gap-6">
-        {[{ href: 'https://www.tiktok.com/@soluciones.de.ia', l: 'TikTok' }, { href: 'https://instagram.com/SOLUCIONES_DEIA', l: 'Instagram' }, { href: 'https://www.linkedin.com/in/corvattaconsultor', l: 'LinkedIn' }].map((s) => (
-          <a key={s.l} href={s.href} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-main)] no-underline transition-colors">{s.l}</a>
+      <p>© 2026 Soluciones de IA. Applied Think Tank &amp; Executive Advisory.</p>
+      <div className="flex flex-wrap items-center gap-6">
+        {[
+          { href: 'https://runtimegovernance.substack.com', l: 'Substack Digest' },
+          { href: 'https://www.tiktok.com/@soluciones.de.ia', l: 'TikTok' },
+          { href: 'https://instagram.com/SOLUCIONES_DEIA', l: 'Instagram' },
+          { href: 'https://www.linkedin.com/in/corvattaconsultor', l: 'LinkedIn' },
+        ].map((s) => (
+          <a
+            key={s.l}
+            href={s.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--text-main)] no-underline transition-colors flex items-center gap-1"
+          >
+            {s.l} ↗
+          </a>
         ))}
       </div>
     </footer>
@@ -1261,6 +1660,8 @@ export default function Home() {
 
       <HeroSection />
       <NeonTubeRail glow="mixed" />
+      <FourPillarsSection />
+      <NeonTubeRail glow="mixed" />
       <BrandEntitySection />
       <ProblemSection />
       <NeonTubeRail glow="amber" />
@@ -1271,6 +1672,9 @@ export default function Home() {
       <ServicesConsole />
       <NeonTubeRail glow="mixed" />
       <PortfolioSection />
+      <NeonTubeRail glow="mixed" />
+      <SubstackDigestSection />
+      <PodcastBannerSection />
       <NeonTubeRail glow="amber" />
       <ContactSection />
       <Footer />
