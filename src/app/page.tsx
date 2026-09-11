@@ -495,6 +495,7 @@ const NAV_LINKS = [
   { href: '#infra', label: 'Infraestructura' },
   { href: '#arquitectura', label: 'Arquitectura' },
   { href: '#servicios', label: 'Servicios' },
+  { href: '#portafolio', label: 'Portafolio' },
 ]
 
 function NavBar() {
@@ -971,6 +972,217 @@ function ServicesConsole() {
 }
 
 // ============================================================
+// PORTFOLIO SECTION (Casos de Éxito / Proyectos Reales)
+// ============================================================
+
+interface PortfolioProject {
+  id: string
+  title: string
+  subtitle: string
+  category: string
+  url: string
+  displayUrl: string
+  previewImage: string
+  brandAsset: string
+  badge: string
+  tags: string
+  description: string
+  highlights: { label: string; value: string }[]
+  ctaText: string
+}
+
+const portfolioProjects: PortfolioProject[] = [
+  {
+    id: 'paz-ortega',
+    title: 'PAZ ORTEGA',
+    subtitle: 'Gobernanza de IA & Legal Tech',
+    category: 'Plataforma Legal Tech · Agente Autónomo',
+    url: 'https://paz-ortega-ia-legal.web.app/',
+    displayUrl: 'paz-ortega-ia-legal.web.app',
+    previewImage: '/portfolio/paz-ortega-preview.png',
+    brandAsset: '/portfolio/paz-ortega-avatar.png',
+    badge: 'Producción Activa',
+    tags: '[LEGAL TECH] [AGENTE IA] [ISO 42001] [EU AI ACT] [RAG PRIVADO]',
+    description: 'Plataforma empresarial de gobernanza en IA que traduce marcos normativos complejos a código operativo. Integra un agente de IA interactivo ("Paz") entrenado con jurisprudencia y marcos regulatorios (EU AI Act, ISO/IEC 42001, NIST RMF) para asistir a trabajadores y corporaciones en tiempo real sin fuga de datos.',
+    highlights: [
+      { label: 'Agente Jurídico', value: 'IA Autónoma RAG' },
+      { label: 'Cumplimiento', value: 'ISO/IEC 42001' },
+      { label: 'Infraestructura', value: 'Cloud Seguro & Local' },
+    ],
+    ctaText: 'Visitar Plataforma ↗',
+  },
+  {
+    id: 'el-escuchante',
+    title: 'El Escuchante',
+    subtitle: 'Escucha Filosófica & Acompañamiento',
+    category: 'Diseño Web de Alta Gama · Algoritmo de Sentido',
+    url: 'https://www.elescuchante.com/',
+    displayUrl: 'www.elescuchante.com',
+    previewImage: '/portfolio/elescuchante-preview.png',
+    brandAsset: '/portfolio/elescuchante-logo.png',
+    badge: 'Producción Activa',
+    tags: '[DISEÑO WEB] [BRANDING] [ALGORITMO DE ESCUCHA] [NEXT.JS] [CONVERSIÓN]',
+    description: 'Sitio web oficial y plataforma de acompañamiento reflexivo y filosófico. Arquitectura editorial minimalista de altísima gama, diseño tipográfico interactivo, instrumento de auto-exploración basado en algoritmos de escucha, catálogo de planes de suscripción y agendamiento conversacional directo.',
+    highlights: [
+      { label: 'Arquitectura Web', value: 'Next.js + Tailwind' },
+      { label: 'Identidad Visual', value: 'Diseño Editorial Pro' },
+      { label: 'Conversión', value: 'Funnel Integrado 24/7' },
+    ],
+    ctaText: 'Explorar Sitio Web ↗',
+  },
+]
+
+function PortfolioSection() {
+  return (
+    <section id="portafolio" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-2xl mx-auto">
+        <span className="sec-label">{"// SYS/PORTAFOLIO // CASOS DE ÉXITO"}</span>
+        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
+          Despliegues en <span className="text-accent-gradient">Producción</span>
+        </h2>
+        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
+          Sistemas vivos, código en producción y plataformas de IA activas desarrolladas con nuestra metodología de Sastrería Algorítmica.
+        </p>
+      </motion.div>
+
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {portfolioProjects.map((project) => (
+          <motion.div key={project.id} variants={fadeUp} className="h-full">
+            <SpotlightCard className="h-full flex flex-col overflow-hidden border border-white/10 hover:border-white/25 transition-all duration-300">
+              {/* Browser Window Header */}
+              <div className="flex items-center justify-between px-5 py-3.5 bg-black/40 border-b border-white/10 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                </div>
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] font-mono text-[var(--text-muted)] hover:text-white hover:border-white/25 transition-colors max-w-[220px] sm:max-w-xs truncate no-underline"
+                  title={`Abrir ${project.title} (${project.url})`}
+                >
+                  <span className="text-[9px] text-[var(--success)]">🔒</span>
+                  <span className="truncate">{project.displayUrl}</span>
+                  <span className="text-[10px] opacity-70">↗</span>
+                </a>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.3)] text-[var(--success)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                  {project.badge}
+                </span>
+              </div>
+
+              {/* Viewport Preview Frame */}
+              <div className="relative w-full h-56 sm:h-64 md:h-72 overflow-hidden border-b border-white/10 group">
+                <Image
+                  src={project.previewImage}
+                  alt={`Captura del proyecto ${project.title}`}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07050a] via-[#07050a]/30 to-transparent opacity-85 pointer-events-none" />
+
+                {/* Floating Brand Badge */}
+                <div className="absolute bottom-3 left-4 flex items-center gap-3 z-10 bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15 shadow-xl">
+                  <div className="w-9 h-9 relative rounded-lg overflow-hidden shrink-0 bg-white/10 p-0.5 border border-white/10">
+                    <Image
+                      src={project.brandAsset}
+                      alt={`${project.title} logo`}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-xs font-bold text-white leading-tight">{project.title}</span>
+                    <span className="block text-[10px] text-[var(--text-muted)] font-mono leading-tight">{project.subtitle}</span>
+                  </div>
+                </div>
+
+                {/* Hover Quick Visit Badge */}
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/85 backdrop-blur-md text-xs font-semibold text-white border border-white/20 hover:border-[var(--secondary-glow)] hover:text-[var(--secondary-glow)] no-underline shadow-lg"
+                >
+                  Abrir ↗
+                </a>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-6 sm:p-7 flex flex-col flex-1 gap-4">
+                <div>
+                  <div className="text-[10px] uppercase font-bold tracking-widest text-[var(--secondary-glow)] mb-2">
+                    {project.category}
+                  </div>
+                  <TagPills tags={project.tags} />
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1">
+                  {project.description}
+                </p>
+
+                {/* Technical Highlights */}
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10">
+                  {project.highlights.map((h) => (
+                    <div key={h.label} className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                      <div className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] truncate">{h.label}</div>
+                      <div className="text-xs font-bold text-[var(--text-main)] truncate mt-0.5">{h.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Direct Action Button */}
+                <div className="pt-2">
+                  <MagneticButton
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    primary
+                    className="w-full justify-center !py-3 !text-xs uppercase tracking-wider font-bold"
+                  >
+                    {project.ctaText}
+                  </MagneticButton>
+                </div>
+              </div>
+            </SpotlightCard>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Available Slot / Next Deployment */}
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+        <SpotlightCard className="p-8 border border-dashed border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 bg-[rgba(37,24,46,0.2)]">
+          <div className="space-y-2 text-left">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--secondary-glow)] animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] font-mono">
+                {"// SYS/SLOT_DISPONIBLE // DESPLIEGUE PERSONALIZADO"}
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-[var(--text-main)]">
+              ¿Su empresa será nuestro próximo caso de éxito?
+            </h3>
+            <p className="text-[var(--text-muted)] text-sm max-w-xl leading-relaxed">
+              Diseñamos plataformas y agentes autónomos a la medida de su flujo de negocio. Resultados auditables, soberanía de datos y código en producción sin dependencias externas.
+            </p>
+          </div>
+          <MagneticButton
+            href="mailto:ssolucionesdeia@gmail.com"
+            primary
+            className="shrink-0 !px-7 !py-3.5 text-xs font-bold uppercase tracking-wider"
+          >
+            Iniciar su Proyecto →
+          </MagneticButton>
+        </SpotlightCard>
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================================
 // CONTACT + FOOTER
 // ============================================================
 
@@ -1058,6 +1270,8 @@ export default function Home() {
       <ArchitecturePlansSection />
       <ServicesConsole />
       <NeonTubeRail glow="mixed" />
+      <PortfolioSection />
+      <NeonTubeRail glow="amber" />
       <ContactSection />
       <Footer />
     </main>
