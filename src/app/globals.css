@@ -33,11 +33,19 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   background-color: var(--bg-asphalt);
   color: var(--text-paper);
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
@@ -259,6 +267,17 @@ html.lenis, html.lenis body { height: auto; }
 .btn-brutalist-canary:hover {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0px var(--text-paper);
+}
+
+@media (max-width: 640px) {
+  .btn-brutalist-red,
+  .btn-brutalist-blue,
+  .btn-brutalist-canary {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.04em !important;
+    box-shadow: 3px 3px 0px var(--text-paper) !important;
+  }
 }
 
 /* ================================================

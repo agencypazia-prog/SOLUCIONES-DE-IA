@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Syne, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -26,6 +26,13 @@ export const metadata: Metadata = {
     "Consultoría de alta dirección y laboratorio de ingeniería en Inteligencia Artificial. Sistemas deterministas, modelos Local-First y cómputo soberano en GPU RTX 5090 sin fuga de datos.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0E1013",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,9 +41,9 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${syne.variable} ${jetBrainsMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${syne.variable} ${jetBrainsMono.variable} ${spaceGrotesk.variable} h-full antialiased overflow-x-hidden`}
     >
-      <body className="min-h-full flex flex-col bg-[#0E1013] text-[#EDECE8]">
+      <body className="min-h-full flex flex-col bg-[#0E1013] text-[#EDECE8] overflow-x-hidden w-full max-w-full">
         {children}
       </body>
     </html>
