@@ -1,460 +1,129 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence, useMotionValue, useSpring, type Variants } from 'framer-motion'
 import Lenis from 'lenis'
 
 // ============================================================
-// NEURAL DATA-MESH — deterministic pseudo-random texture data
-// (seeded, not Math.random, so SSR/client render identically)
+// BRUTALIST PIXEL ART & TECHNICAL SVG ICONS (ANGULAR / CRISP)
 // ============================================================
 
-function seededRandom(seed: number) {
-  const x = Math.sin(seed * 9301 + 49297) * 233280
-  return x - Math.floor(x)
-}
-
-// Rounded to 2dp: sin() can differ in its last bits between the Node (SSR)
-// and browser (client) engines, which otherwise causes a hydration mismatch.
-function round2(n: number) {
-  return Math.round(n * 100) / 100
-}
-
-const MESH_VIEWBOX = { w: 1600, h: 1000 }
-
-const MESH_NODES = Array.from({ length: 46 }, (_, i) => ({
-  x: round2(seededRandom(i * 3.1) * MESH_VIEWBOX.w),
-  y: round2(seededRandom(i * 7.7 + 1) * MESH_VIEWBOX.h),
-  accent: i % 7 === 0,
-}))
-
-const MESH_LINES = (() => {
-  const lines: { x1: number; y1: number; x2: number; y2: number }[] = []
-  for (let i = 0; i < MESH_NODES.length; i++) {
-    for (let j = i + 1; j < MESH_NODES.length; j++) {
-      const a = MESH_NODES[i], b = MESH_NODES[j]
-      const d = Math.hypot(a.x - b.x, a.y - b.y)
-      if (d < 190) lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y })
-    }
-  }
-  return lines
-})()
-
-const CODE_COLUMNS = Array.from({ length: 9 }, (_, c) => {
-  const left = round2(3 + c * 11 + seededRandom(c * 5.5) * 4)
-  const text = Array.from({ length: 26 }, (_, i) => (seededRandom(c * 13 + i) > 0.5 ? '1' : '0')).join('\n')
-  const delay = round2(seededRandom(c * 2.2) * -16)
-  return { left, text, delay }
-})
-
-// ============================================================
-// DATA
-// ============================================================
-
-interface Service {
-  id: string; name: string; file: string; tags: string; desc: string
-  nodeStatus: string; complianceMarco: string
-  integrityLevel: string; hashAddress: string; threatAssessment: string
-}
-
-const servicesData: Service[] = [
-  {
-    id: "cmd_gobernanza", name: "Gobernanza de IA", file: "Gobernanza_IA.sys",
-    tags: "[ISO/IEC 42001] [EU AI ACT] [NIST RMF]",
-    desc: `Sin un marco legal sólido, cada despliegue de IA es un pasivo jurídico y reputacional.\n\nEstructuramos el marco de gobernanza ética bajo ISO/IEC 42001, EU AI Act y NIST AI RMF. Elaboramos políticas de uso aceptable, matrices de riesgo algorítmico, protocolos de auditoría y planes de remediación.\n\nResultado: su empresa lista para reguladores, auditores e inversores. Hoy.`,
-    nodeStatus: "Sistema Acreditado", complianceMarco: "ISO_42001",
-    integrityLevel: "99.9% ACCREDITED",
-    hashAddress: "0x00A4F42D", threatAssessment: "Mitigado con marco",
-  },
-  {
-    id: "cmd_agentes", name: "Agentes Múltiples", file: "Agentes_Multiples.exe",
-    tags: "[MULTI-AGENT] [LANGGRAPH] [AUTÓNOMO 24/7]",
-    desc: `Un solo modelo de IA es un asistente. Una red de agentes es un equipo completo.\n\nDiseñamos sistemas donde múltiples agentes especializados se orquestan para ejecutar tareas complejas de forma autónoma: investigación, análisis, redacción, decisiones y acciones — todo sin intervención humana.\n\nResultado: procesos que tardaban días se ejecutan en minutos, 24 horas al día.`,
-    nodeStatus: "Activo · 4 Agentes", complianceMarco: "LANGGRAPH_ORQ",
-    integrityLevel: "98.7% UPTIME",
-    hashAddress: "0x00B5E831", threatAssessment: "Controlado",
-  },
-  {
-    id: "cmd_automatizacion", name: "Automatización Inteligente", file: "Automatizacion.sh",
-    tags: "[WORKFLOWS] [API-FIRST] [NO-CODE / PRO-CODE]",
-    desc: `Cada tarea repetitiva que su equipo hace manualmente es dinero perdido y tiempo robado.\n\nConectamos sus sistemas (ERP, CRM, correo, WhatsApp, hojas de cálculo) y automatizamos los flujos de trabajo con IA. Desde notificaciones inteligentes hasta pipelines de datos complejos, sin tocar su infraestructura actual.\n\nResultado: su equipo se enfoca en lo estratégico. La IA ejecuta el resto.`,
-    nodeStatus: "Workflows Activos", complianceMarco: "N8N_PIPELINE",
-    integrityLevel: "99.5% AUTOMATED",
-    hashAddress: "0x00C7D912", threatAssessment: "Riesgo mínimo",
-  },
-  {
-    id: "cmd_chatbot", name: "Chatbot Corporativo", file: "Chatbot_Corporativo.exe",
-    tags: "[RAG] [MULTICANAL] [BRAND-ALIGNED]",
-    desc: `Un chatbot genérico daña su marca. El nuestro la refuerza cada vez que responde.\n\nConstruimos chatbots entrenados con su información privada (manuales, catálogos, políticas) que responden con la voz y los valores de su empresa. Disponibles en web, WhatsApp y Slack. Sus datos nunca salen de su infraestructura.\n\nResultado: atención al cliente 24/7 con coherencia de marca y cero fuga de datos.`,
-    nodeStatus: "RAG Activo", complianceMarco: "RAG_PRIVADO",
-    integrityLevel: "99.8% BRAND-ALIGNED",
-    hashAddress: "0x00D4A721", threatAssessment: "Datos protegidos",
-  },
-  {
-    id: "cmd_fine_tuning", name: "Fine-Tuning / Branding de Algoritmo", file: "Fine_Tuning.py",
-    tags: "[FINE-TUNING] [LORA] [GUARDRAILS ÉTICOS]",
-    desc: `Los modelos genéricos hablan de todo. El suyo hablará solo de su negocio.\n\nTomamos un modelo base (LLaMA, Mistral, Qwen) y lo entrenamos con los datos, terminología y cultura de su empresa usando LoRA/QLoRA. Integramos guardrails éticos que previenen respuestas fuera de política.\n\nResultado: un modelo de IA con el conocimiento y la personalidad de su organización.`,
-    nodeStatus: "LoRA Activo", complianceMarco: "LORA_QLORA",
-    integrityLevel: "98.2% ALIGNED",
-    hashAddress: "0x00E8F534", threatAssessment: "Moderado",
-  },
-  {
-    id: "cmd_solucion_medida", name: "Solución a Medida", file: "Solucion_Medida.build",
-    tags: "[CUSTOM BUILD] [FULL-STACK AI] [END-TO-END]",
-    desc: `Su problema es único. Su solución de IA también debe serlo.\n\nDiseñamos e implementamos arquitecturas de IA desde cero: levantamiento de requerimientos, diseño de datos, selección de modelos, desarrollo de APIs, integración con sistemas legacy y despliegue en producción. Sin vendor lock-in.\n\nResultado: una solución de IA que nadie más tiene, construida para escalar con usted.`,
-    nodeStatus: "En Construcción", complianceMarco: "CUSTOM_BUILD",
-    integrityLevel: "100% A MEDIDA",
-    hashAddress: "0x00F1B043", threatAssessment: "Arquitectura robusta",
-  },
-]
-
-// ============================================================
-// ANIMATION VARIANTS
-// ============================================================
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
-}
-
-const staggerParent: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
-}
-
-// ============================================================
-// PRIMITIVES
-// ============================================================
-
-function AnimatedCounter({ target, trigger = true }: { target: number; trigger?: boolean }) {
-  const [val, setVal] = useState(0)
-  useEffect(() => {
-    if (!trigger) return
-    let frame = 0; const total = 50
-    const tick = () => { frame++; setVal(Math.round(target * Math.min(frame / total, 1))); if (frame < total) requestAnimationFrame(tick) }
-    const t = setTimeout(() => requestAnimationFrame(tick), 200)
-    return () => clearTimeout(t)
-  }, [target, trigger])
-  return <>{val}</>
-}
-
-function MagneticButton({
-  href, children, className = '', primary = false, target, rel,
-}: { href: string; children: React.ReactNode; className?: string; primary?: boolean; target?: string; rel?: string }) {
-  const ref = useRef<HTMLAnchorElement>(null)
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const sx = useSpring(mx, { stiffness: 150, damping: 14, mass: 0.15 })
-  const sy = useSpring(my, { stiffness: 150, damping: 14, mass: 0.15 })
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    const el = ref.current; if (!el) return
-    const rect = el.getBoundingClientRect()
-    mx.set((e.clientX - rect.left - rect.width / 2) * 0.35)
-    my.set((e.clientY - rect.top - rect.height / 2) * 0.35)
-  }
-  const onMouseLeave = () => { mx.set(0); my.set(0) }
-
+function PixelCoreIcon({ className = "w-5 h-5 text-[#E7FF00]" }: { className?: string }) {
   return (
-    <motion.a
-      ref={ref}
-      href={href}
-      target={target}
-      rel={rel}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      style={{ x: sx, y: sy, ...(primary ? { background: 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))' } : {}) }}
-      className={`inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold no-underline transition-colors ${
-        primary
-          ? 'text-black'
-          : 'text-[var(--text-main)] border border-[var(--surface-border)] hover:border-white/30'
-      } ${className}`}
-    >
-      {children}
-    </motion.a>
-  )
-}
-
-function SpotlightCard({
-  children, className = '', as: Tag = 'div',
-}: { children: React.ReactNode; className?: string; as?: 'div' | 'article' }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const onMove = (e: React.MouseEvent) => {
-    const el = ref.current; if (!el) return
-    const rect = el.getBoundingClientRect()
-    el.style.setProperty('--mx', `${e.clientX - rect.left}px`)
-    el.style.setProperty('--my', `${e.clientY - rect.top}px`)
-  }
-  const Comp = Tag as 'div'
-  return (
-    <Comp ref={ref} onMouseMove={onMove} className={`premium-card premium-card-spot ${className}`}>
-      <div className="halftone-card-surface" aria-hidden="true" />
-      {children}
-    </Comp>
-  )
-}
-
-function TopographicContourLayer() {
-  return (
-    <svg
-      className="topographic-layer"
-      viewBox="0 0 1600 1000"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="topo-grad-ambient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(255, 190, 0, 0.22)" />
-          <stop offset="50%" stopColor="rgba(255, 255, 255, 0.08)" />
-          <stop offset="100%" stopColor="rgba(202, 31, 61, 0.22)" />
-        </linearGradient>
-      </defs>
-
-      {/* Sweeping Contour Ridges (Elevation Flows) */}
-      <g className="contour-group opacity-70">
-        <path
-          d="M -60 380 C 320 450, 680 290, 930 430 C 1140 540, 1370 690, 1680 600"
-          className="contour-line"
-        />
-        <path
-          d="M -60 440 C 310 510, 670 350, 920 490 C 1130 600, 1360 750, 1680 660"
-          className="contour-line contour-line-accent"
-        />
-        <path
-          d="M -60 500 C 300 570, 660 410, 910 550 C 1120 660, 1350 810, 1680 720"
-          className="contour-line"
-        />
-        <path
-          d="M -60 560 C 290 630, 650 470, 900 610 C 1110 720, 1340 870, 1680 780"
-          className="contour-line contour-line-crimson"
-        />
-        <path
-          d="M -60 620 C 280 690, 640 530, 890 670 C 1100 780, 1330 930, 1680 840"
-          className="contour-line"
-        />
-      </g>
-
-      {/* Concentric Elevation Basin (Top Right Manifold) */}
-      <g className="contour-manifold-1 opacity-80">
-        <path
-          d="M 1220 180 C 1330 180, 1400 230, 1390 320 C 1380 410, 1290 440, 1220 440 C 1130 440, 1070 390, 1080 310 C 1090 230, 1140 180, 1220 180 Z"
-          className="contour-line"
-        />
-        <path
-          d="M 1220 140 C 1370 140, 1450 210, 1440 330 C 1430 450, 1320 480, 1220 480 C 1100 480, 1020 420, 1030 310 C 1040 200, 1110 140, 1220 140 Z"
-          className="contour-line contour-line-accent"
-        />
-        <path
-          d="M 1220 100 C 1410 100, 1510 190, 1500 350 C 1480 500, 1350 530, 1220 530 C 1060 530, 970 450, 980 310 C 990 170, 1080 100, 1220 100 Z"
-          className="contour-line"
-        />
-        <path
-          d="M 1220 60 C 1450 60, 1570 170, 1560 370 C 1540 550, 1380 580, 1220 580 C 1020 580, 920 480, 930 310 C 940 140, 1050 60, 1220 60 Z"
-          className="contour-line contour-line-crimson"
-        />
-      </g>
-
-      {/* Elevation Basin (Lower Left Manifold) */}
-      <g className="contour-manifold-2 opacity-80">
-        <path
-          d="M 320 640 C 410 630, 470 680, 460 760 C 450 830, 390 870, 310 860 C 240 850, 190 800, 200 730 C 210 660, 250 640, 320 640 Z"
-          className="contour-line"
-        />
-        <path
-          d="M 330 590 C 450 580, 530 650, 510 770 C 490 880, 410 930, 300 920 C 200 910, 140 840, 150 740 C 160 640, 220 590, 330 590 Z"
-          className="contour-line contour-line-accent"
-        />
-        <path
-          d="M 340 530 C 500 520, 600 610, 570 780 C 540 940, 430 990, 280 980 C 140 970, 70 880, 90 740 C 110 610, 190 530, 340 530 Z"
-          className="contour-line"
-        />
-      </g>
-
-      {/* Cartographic / Algorithmic Labels */}
-      <text x="1395" y="325" className="contour-label">∇_θ LOSS 0.82</text>
-      <text x="1060" y="315" className="contour-label">ISO/IEC 42001</text>
-      <text x="515" y="765" className="contour-label">LATENT_Z: 4096</text>
-      <text x="925" y="495" className="contour-label">+32GB VRAM</text>
-      <text x="680" y="355" className="contour-label">AIR-GAPPED LOCAL</text>
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="2" y="2" width="12" height="1" />
+      <rect x="2" y="13" width="12" height="1" />
+      <rect x="2" y="3" width="1" height="10" />
+      <rect x="13" y="3" width="1" height="10" />
+      <rect x="5" y="5" width="6" height="6" />
+      <rect x="0" y="4" width="2" height="1" />
+      <rect x="0" y="7" width="2" height="1" />
+      <rect x="0" y="10" width="2" height="1" />
+      <rect x="14" y="4" width="2" height="1" />
+      <rect x="14" y="7" width="2" height="1" />
+      <rect x="14" y="10" width="2" height="1" />
+      <rect x="4" y="0" width="1" height="2" />
+      <rect x="7" y="0" width="1" height="2" />
+      <rect x="10" y="0" width="1" height="2" />
+      <rect x="4" y="14" width="1" height="2" />
+      <rect x="7" y="14" width="1" height="2" />
+      <rect x="10" y="14" width="1" height="2" />
     </svg>
   )
 }
 
-function HalftoneTextureLayer() {
+function PixelNetworkIcon({ className = "w-6 h-6 text-[#0047FF]" }: { className?: string }) {
   return (
-    <>
-      <div className="halftone-layer" aria-hidden="true" />
-      <div className="halftone-accent-layer" aria-hidden="true" />
-    </>
-  )
-}
-
-function NeonTubeRail({ className = '', glow = 'mixed' }: { className?: string; glow?: 'amber' | 'crimson' | 'mixed' }) {
-  return (
-    <div className={`relative w-full max-w-7xl mx-auto px-6 md:px-10 py-8 my-2 flex items-center justify-center overflow-hidden z-10 ${className}`}>
-      <div className="w-full relative flex items-center">
-        {/* Left Anode Cap */}
-        <div className="w-3 h-3.5 bg-[#140d1a] border border-[#FFBE00]/80 rounded-[2px] shrink-0 shadow-[0_0_8px_rgba(255,190,0,0.5)] z-20" />
-        
-        {/* Neon Tube Rail */}
-        <div className="relative flex-1 h-[3px] mx-1">
-          {/* Intense Outer Plasma Bloom */}
-          <div 
-            className="absolute -inset-y-1.5 inset-x-0 rounded-full blur-[10px] opacity-80 neon-pulse"
-            style={{
-              background: glow === 'amber' 
-                ? 'var(--secondary-glow)'
-                : glow === 'crimson'
-                ? 'var(--primary-glow)'
-                : 'linear-gradient(90deg, var(--primary-glow) 0%, var(--secondary-glow) 50%, var(--primary-glow) 100%)'
-            }}
-          />
-          {/* Gas Sheath */}
-          <div 
-            className="absolute inset-0 rounded-full blur-[3px]"
-            style={{
-              background: glow === 'amber'
-                ? '#FFBE00'
-                : glow === 'crimson'
-                ? '#CA1F3D'
-                : 'linear-gradient(90deg, #CA1F3D 0%, #FFBE00 50%, #CA1F3D 100%)'
-            }}
-          />
-          {/* White Incandescent Core */}
-          <div className="relative w-full h-full bg-white rounded-full shadow-[0_0_4px_#fff,0_0_12px_var(--secondary-glow)] z-10" />
-        </div>
-
-        {/* Right Cathode Cap */}
-        <div className="w-3 h-3.5 bg-[#140d1a] border border-[#CA1F3D]/80 rounded-[2px] shrink-0 shadow-[0_0_8px_rgba(202,31,61,0.5)] z-20" />
-      </div>
-    </div>
-  )
-}
-
-function NeonConduitAccent() {
-  return (
-    <svg
-      className="absolute -top-10 -right-8 w-[280px] h-[280px] md:w-[420px] md:h-[420px] pointer-events-none opacity-85 z-0 neon-pulse"
-      viewBox="0 0 400 400"
-      fill="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <filter id="neon-conduit-bloom" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="6" result="blur1" />
-          <feGaussianBlur stdDeviation="16" result="blur2" />
-          <feMerge>
-            <feMergeNode in="blur2" />
-            <feMergeNode in="blur1" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <linearGradient id="neon-conduit-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#CA1F3D" />
-          <stop offset="50%" stopColor="#FFBE00" />
-          <stop offset="100%" stopColor="#CA1F3D" />
-        </linearGradient>
-      </defs>
-      
-      {/* Outer gas bloom */}
-      <path
-        d="M 30 360 C 110 240, 210 190, 370 60"
-        stroke="url(#neon-conduit-grad)"
-        strokeWidth="10"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.3"
-        filter="url(#neon-conduit-bloom)"
-      />
-      {/* Saturated gas sheath */}
-      <path
-        d="M 30 360 C 110 240, 210 190, 370 60"
-        stroke="url(#neon-conduit-grad)"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.9"
-      />
-      {/* Hot white filament core */}
-      <path
-        d="M 30 360 C 110 240, 210 190, 370 60"
-        stroke="#FFFFFF"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Terminal electrodes */}
-      <circle cx="30" cy="360" r="4.5" fill="#140d1a" stroke="#CA1F3D" strokeWidth="2" />
-      <circle cx="370" cy="60" r="4.5" fill="#140d1a" stroke="#FFBE00" strokeWidth="2" />
-      <circle cx="30" cy="360" r="1.5" fill="#FFFFFF" />
-      <circle cx="370" cy="60" r="1.5" fill="#FFFFFF" />
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="1" y="1" width="4" height="4" />
+      <rect x="11" y="1" width="4" height="4" />
+      <rect x="6" y="11" width="4" height="4" />
+      <rect x="3" y="5" width="1" height="4" />
+      <rect x="12" y="5" width="1" height="4" />
+      <rect x="4" y="8" width="8" height="1" />
+      <rect x="8" y="9" width="1" height="2" />
     </svg>
   )
 }
 
-function NeuralMeshBackground() {
+function PixelShieldIcon({ className = "w-6 h-6 text-[#FF3B1E]" }: { className?: string }) {
   return (
-    <svg
-      className="mesh-layer"
-      viewBox={`0 0 ${MESH_VIEWBOX.w} ${MESH_VIEWBOX.h}`}
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      <g className="mesh-lines">
-        {MESH_LINES.map((l, i) => (
-          <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
-        ))}
-      </g>
-      <g className="mesh-nodes">
-        {MESH_NODES.map((n, i) => (
-          <circle key={i} cx={n.x} cy={n.y} r={n.accent ? 2.8 : 1.4} className={n.accent ? 'mesh-node-accent' : ''} />
-        ))}
-      </g>
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="2" y="1" width="12" height="2" />
+      <rect x="1" y="3" width="14" height="4" />
+      <rect x="2" y="7" width="12" height="3" />
+      <rect x="3" y="10" width="10" height="2" />
+      <rect x="5" y="12" width="6" height="2" />
+      <rect x="7" y="14" width="2" height="1" />
+      <rect x="7" y="4" width="2" height="5" fill="#0E1013" />
+      <rect x="5" y="5" width="6" height="2" fill="#0E1013" />
     </svg>
   )
 }
 
-function CodeStreamLayer() {
+function PixelGpuIcon({ className = "w-6 h-6 text-[#E7FF00]" }: { className?: string }) {
   return (
-    <div className="code-rain" aria-hidden="true">
-      {CODE_COLUMNS.map((col, i) => (
-        <span key={i} className="code-col" style={{ left: `${col.left}%`, animationDelay: `${col.delay}s` }}>
-          {col.text}
-        </span>
-      ))}
-    </div>
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="1" y="3" width="14" height="10" />
+      <rect x="3" y="5" width="4" height="6" fill="#0E1013" />
+      <rect x="9" y="5" width="4" height="6" fill="#0E1013" />
+      <rect x="0" y="5" width="1" height="2" />
+      <rect x="0" y="9" width="1" height="2" />
+      <rect x="15" y="5" width="1" height="2" />
+      <rect x="15" y="9" width="1" height="2" />
+      <rect x="4" y="1" width="2" height="2" />
+      <rect x="7" y="1" width="2" height="2" />
+      <rect x="10" y="1" width="2" height="2" />
+      <rect x="4" y="13" width="2" height="2" />
+      <rect x="7" y="13" width="2" height="2" />
+      <rect x="10" y="13" width="2" height="2" />
+    </svg>
   )
 }
 
-function MeshGlow() {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const el = ref.current; if (!el) return
-      el.style.setProperty('--page-mx', `${(e.clientX / window.innerWidth) * 100}%`)
-      el.style.setProperty('--page-my', `${(e.clientY / window.innerHeight) * 100}%`)
-    }
-    window.addEventListener('mousemove', onMove, { passive: true })
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
-  return <div ref={ref} className="mesh-glow" />
+function PixelEyeIcon({ className = "w-6 h-6 text-[#0047FF]" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="4" y="3" width="8" height="2" />
+      <rect x="2" y="5" width="12" height="2" />
+      <rect x="1" y="7" width="14" height="2" />
+      <rect x="2" y="9" width="12" height="2" />
+      <rect x="4" y="11" width="8" height="2" />
+      <rect x="6" y="6" width="4" height="4" fill="#0E1013" />
+      <rect x="7" y="7" width="2" height="2" fill="#E7FF00" />
+    </svg>
+  )
 }
 
-function CustomCursor() {
-  const [enabled, setEnabled] = useState(false)
+function PixelTerminalIcon({ className = "w-6 h-6 text-[#EDECE8]" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`${className} pixel-art`}>
+      <rect x="1" y="2" width="14" height="12" />
+      <rect x="3" y="4" width="10" height="8" fill="#0E1013" />
+      <rect x="4" y="6" width="2" height="1" fill="#EDECE8" />
+      <rect x="5" y="7" width="2" height="1" fill="#EDECE8" />
+      <rect x="4" y="8" width="2" height="1" fill="#EDECE8" />
+      <rect x="8" y="9" width="3" height="1" fill="#E7FF00" />
+    </svg>
+  )
+}
+
+// ============================================================
+// BRUTALIST MAGNETIC SQUARE CURSOR
+// ============================================================
+
+function BrutalistCursor() {
+  const [pos, setPos] = useState({ x: -100, y: -100 })
   const [hovering, setHovering] = useState(false)
-  const dotX = useMotionValue(-100)
-  const dotY = useMotionValue(-100)
-  const ringX = useSpring(dotX, { stiffness: 300, damping: 30, mass: 0.5 })
-  const ringY = useSpring(dotY, { stiffness: 300, damping: 30, mass: 0.5 })
+  const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return
     const frame = requestAnimationFrame(() => setEnabled(true))
-    const onMove = (e: MouseEvent) => { dotX.set(e.clientX); dotY.set(e.clientY) }
-    const onOver = (e: MouseEvent) => setHovering(!!(e.target as HTMLElement).closest('a, button'))
+    const onMove = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY })
+    const onOver = (e: MouseEvent) => {
+      setHovering(!!(e.target as HTMLElement).closest('a, button, input'))
+    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseover', onOver)
     return () => {
@@ -462,700 +131,828 @@ function CustomCursor() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseover', onOver)
     }
-  }, [dotX, dotY])
+  }, [])
 
   if (!enabled) return null
 
   return (
     <>
-      <motion.div className="cursor-dot" style={{ left: dotX, top: dotY }} />
-      <motion.div className={`cursor-ring ${hovering ? 'cursor-ring-hover' : ''}`} style={{ left: ringX, top: ringY }} />
+      <div
+        className="cursor-dot"
+        style={{ transform: `translate(${pos.x - 3}px, ${pos.y - 3}px)` }}
+      />
+      <div
+        className={`cursor-ring ${hovering ? 'cursor-ring-hover' : ''}`}
+        style={{
+          transform: `translate(${pos.x - (hovering ? 24 : 14)}px, ${pos.y - (hovering ? 24 : 14)}px)`,
+        }}
+      />
     </>
   )
 }
 
-function TagPills({ tags }: { tags: string }) {
-  const items = tags.match(/\[[^\]]+\]/g) ?? []
+// ============================================================
+// CORNER MARKS COMPONENT FOR BLUEPRINT CARDS
+// ============================================================
+
+function CornerMarks() {
   return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((t) => (
-        <span key={t} className="tag-pill">{t.replace(/[[\]]/g, '')}</span>
-      ))}
+    <>
+      <span className="corner-cross-tl">+</span>
+      <span className="corner-cross-tr">+</span>
+      <span className="corner-cross-bl">+</span>
+      <span className="corner-cross-br">+</span>
+    </>
+  )
+}
+
+// ============================================================
+// TECHNICAL HUD (HEADER)
+// ============================================================
+
+const NAV_LINKS = [
+  { href: '#soluciones', num: '01', label: 'SOLUCIONES' },
+  { href: '#arquitectura', num: '02', label: 'ARQUITECTURA' },
+  { href: '#modelos', num: '03', label: 'MODELOS' },
+  { href: '#casos', num: '04', label: 'CASOS' },
+  { href: '#digest', num: '05', label: 'INVESTIGACIÓN' },
+  { href: '#contacto', num: '06', label: 'CONTACTO' },
+]
+
+function TechnicalHUD() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <header
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b"
+      style={{
+        backgroundColor: scrolled ? 'rgba(14, 16, 19, 0.95)' : 'rgba(14, 16, 19, 0.82)',
+        backdropFilter: 'blur(12px)',
+        borderColor: scrolled ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.1)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand & Kernel Status */}
+        <div className="flex items-center gap-4">
+          <a href="#hero" className="flex items-center gap-2.5 no-underline group">
+            <div className="w-7 h-7 bg-white/5 border border-white/20 flex items-center justify-center group-hover:border-[#FF3B1E] transition-colors">
+              <PixelCoreIcon className="w-4 h-4 text-[#E7FF00]" />
+            </div>
+            <span className="font-display font-black text-sm tracking-wider text-[#EDECE8] uppercase">
+              SOLUCIONES DE IA
+            </span>
+          </a>
+
+          {/* Micro Status Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 border border-white/10 bg-white/5 font-mono text-[11px] text-[#6E7681]">
+            <span className="w-1.5 h-1.5 bg-[#E7FF00] animate-pulse inline-block" />
+            <span className="text-[#E7FF00] font-bold">[● KERNEL_ACTIVE:</span>
+            <span>v4.2.0]</span>
+          </div>
+        </div>
+
+        {/* Numbered Editorial Navigation */}
+        <nav className="hidden lg:flex items-center gap-6 font-mono text-xs">
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-[#6E7681] hover:text-[#EDECE8] transition-colors no-underline flex items-center gap-1"
+            >
+              <span className="text-[#0047FF] font-bold">{`${l.num}//`}</span>
+              <span className="tracking-wider">{l.label}</span>
+            </a>
+          ))}
+        </nav>
+
+        {/* CTA Button */}
+        <a
+          href="mailto:ssolucionesdeia@gmail.com"
+          className="btn-brutalist-red !py-2 !px-4 !text-xs"
+        >
+          INICIAR_PROYECTO
+        </a>
+      </div>
+    </header>
+  )
+}
+
+// ============================================================
+// HERO SECTION (SUPREMATIST ASYMMETRIC DECOMPOSITION)
+// ============================================================
+
+function SuprematistHero() {
+  return (
+    <section id="hero" className="relative pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-[92vh] flex flex-col justify-center">
+      {/* Top Architectural Specification Tag */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 pb-3 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+        <div className="flex items-center gap-2">
+          <span className="text-[#E7FF00] font-bold">[SYS_ARCH]</span>
+          <span>LOCAL-FIRST // DETERMINISTIC_AI // SOBERANÍA TOTAL</span>
+        </div>
+        <div>
+          <span>REF_CODE: 0x5090_VRAM // LATENCY: &lt;24MS</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+        {/* Left Column: Suprematist Heavy Headline (7 cols) */}
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] tracking-tight uppercase leading-[0.92] text-[#EDECE8]">
+              INGENIERÍA
+              <span className="block bg-[#FF3B1E] text-[#EDECE8] px-3 py-1 my-2 border border-black shadow-[4px_4px_0px_#EDECE8] w-fit">
+                ALGORÍTMICA
+              </span>
+              Y SOBERANÍA
+              <span className="inline-block bg-[#0047FF] text-[#EDECE8] px-3 py-1 my-2 border border-black shadow-[4px_4px_0px_#EDECE8] w-fit">
+                LOCAL-FIRST
+              </span>
+            </h1>
+
+            <p className="text-[#EDECE8]/80 text-base sm:text-lg max-w-xl font-normal leading-relaxed pt-2">
+              Laboratorio de arquitectura y consultoría de alta dirección en Inteligencia Artificial. Diseñamos sistemas deterministas, modelos de contexto pragmático y ejecución Local-First en hardware de élite (RTX 5090 · 32 GB VRAM) con cero fuga de datos hacia nubes de terceros.
+            </p>
+          </div>
+
+          {/* Brutalist Action Buttons */}
+          <div className="pt-2 flex flex-wrap gap-4">
+            <a
+              href="mailto:ssolucionesdeia@gmail.com"
+              className="btn-brutalist-red"
+            >
+              INICIAR_AUDITORÍA_EJECUTIVA →
+            </a>
+            <a
+              href="#soluciones"
+              className="btn-brutalist-blue"
+            >
+              &gt; DESPLEGAR_DEMO
+            </a>
+          </div>
+
+          {/* Millimetric Coordinate Metrics */}
+          <div className="pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+            <div>
+              <div className="text-[10px] uppercase text-[#6E7681]">CÓMPUTO LOCAL</div>
+              <div className="text-sm font-bold text-[#EDECE8] mt-0.5">RTX 5090 · 32GB</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-[#6E7681]">FUGA A NUBE</div>
+              <div className="text-sm font-bold text-[#E7FF00] mt-0.5">0 BYTES EXPUESTOS</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-[#6E7681]">LATENCIA MÁX</div>
+              <div className="text-sm font-bold text-[#0047FF] mt-0.5">&lt;18MS INFERENCIA</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-[#6E7681]">ESTADO MARCO</div>
+              <div className="text-sm font-bold text-[#FF3B1E] mt-0.5">ISO 42001 / EU ACT</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: AI Architecture Blueprint Patent Module (5 cols) */}
+        <div className="lg:col-span-5">
+          <div className="card-glass-industrial p-6 sm:p-7 h-full flex flex-col justify-between border-blueprint">
+            <CornerMarks />
+
+            {/* Patent Header */}
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-white/10 font-mono text-[11px] text-[#6E7681]">
+                <span className="text-[#E7FF00] font-bold">PATENT_SPEC // SCHEMATIC_01</span>
+                <span>X: 34.09 // Y: -118.24</span>
+              </div>
+
+              {/* Vectorial Architecture Flow */}
+              <div className="my-6 p-4 bg-black/60 border border-white/10 font-mono text-xs space-y-3 relative overflow-hidden">
+                <div className="text-[10px] uppercase text-[#6E7681] tracking-widest pb-1 border-b border-white/5 flex items-center justify-between">
+                  <span>RUNTIME_FLOW // LOCAL ENCLAVE</span>
+                  <span className="text-[#0047FF]">AIR-GAPPED</span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10">
+                    <span className="text-[#FF3B1E] font-bold">{"01//"}</span>
+                    <span className="text-[#EDECE8]">INPUT_LAYER: Ingesta Semántica Cruda</span>
+                  </div>
+                  <div className="flex justify-center text-[#6E7681] text-[10px]">▼ (RAG Contextual Determinista)</div>
+                  <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10">
+                    <span className="text-[#0047FF] font-bold">{"02//"}</span>
+                    <span className="text-[#EDECE8]">HERMENEUTIC_FILTER: Eliminación de Alucinación</span>
+                  </div>
+                  <div className="flex justify-center text-[#6E7681] text-[10px]">▼ (Inferencia PCIe Gen 5.0)</div>
+                  <div className="flex items-center gap-2 p-2 bg-[#0047FF]/20 border border-[#0047FF]">
+                    <span className="text-[#E7FF00] font-bold">{"03//"}</span>
+                    <span className="text-[#EDECE8] font-bold">RTX_5090_RUNTIME (32GB VRAM · 92 TFLOPS)</span>
+                  </div>
+                  <div className="flex justify-center text-[#6E7681] text-[10px]">▼ (Guardrails Deterministas)</div>
+                  <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10">
+                    <span className="text-[#FF3B1E] font-bold">{"04//"}</span>
+                    <span className="text-[#EDECE8]">RUNTIME_FIREWALL: Control de Agencia Estricto</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hardware Specifications Spec Sheet */}
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-[#6E7681]">PROCESADOR IA:</span>
+                  <span className="text-[#EDECE8] font-bold">NVIDIA RTX 5090 · 32GB GDDR7</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-[#6E7681]">ANCHO DE BANDA:</span>
+                  <span className="text-[#0047FF] font-bold">~3,352 GB/s · PCIe Gen 5</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-[#6E7681]">CÓMPUTO HOST:</span>
+                  <span className="text-[#EDECE8]">AMD Ryzen 9 9950X · 192GB DDR5</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-[#6E7681]">ALMACENAMIENTO:</span>
+                  <span className="text-[#EDECE8]">7 TB NVMe Cifrado en Reposo</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Terminal Telemetry Output */}
+            <div className="mt-4 pt-3 border-t border-white/10 font-mono text-[11px] text-[#6E7681] flex items-center justify-between">
+              <span className="text-[#E7FF00]">$ exec_sovereign_runtime</span>
+              <span className="text-[#EDECE8] font-bold">TELEMETRÍA_100%_PRIVADA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// CONTINUOUS KINETIC TICKER (MARQUEE)
+// ============================================================
+
+function KineticTicker() {
+  return (
+    <div className="w-full overflow-hidden border-y-2 border-[#FF3B1E] bg-[#0E1013] py-3 relative z-20">
+      <div className="animate-marquee space-x-8 text-xs sm:text-sm font-mono tracking-wider uppercase text-[#EDECE8]">
+        {[0, 1].map((idx) => (
+          <div key={idx} className="flex items-center space-x-6 shrink-0">
+            <span className="bg-[#FF3B1E] text-[#EDECE8] px-2 py-0.5 font-bold">⚡ MANIFIESTO EJECUTIVO:</span>
+            <span>«LA INTELIGENCIA ARTIFICIAL NO ES SOLO UN PROBLEMA DE INGENIERÍA: ES UNA CRISIS DE SENTIDO, UNA MUTACIÓN COGNITIVA Y UN DESAFÍO DE CONTROL DETERMINISTA.»</span>
+            <span className="text-[#0047FF]">■</span>
+            <span className="text-[#E7FF00] font-bold">SOLUCIONES DE IA</span>
+            <span>·</span>
+            <span>CÓMPUTO SOBERANO LOCAL-FIRST (RTX 5090 · 32GB VRAM)</span>
+            <span className="text-[#FF3B1E]">●</span>
+            <span>ZERO CLOUD LEAKAGE</span>
+            <span>·</span>
+            <span>ISO 42001 &amp; NIST AI RMF</span>
+            <span className="text-[#0047FF]">▲</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
 // ============================================================
-// NAVBAR
+// BLUEPRINT SOLUTIONS GRID (3 UNBALANCED COLUMNS COLLAGE)
 // ============================================================
 
-const NAV_LINKS = [
-  { href: '#pilares', label: 'Pilares' },
-  { href: '#metodologia', label: 'Metodología' },
-  { href: '#infra', label: 'Cómputo Local' },
-  { href: '#portafolio', label: 'Portafolio' },
-  { href: '#digest', label: 'Investigación' },
-  { href: '#podcast', label: 'Podcast' },
-]
-
-function NavBar() {
-  const [scrolled, setScrolled] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 transition-all duration-300"
-      style={{
-        height: scrolled ? '64px' : '84px',
-        background: scrolled ? 'rgba(8,9,12,0.85)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--surface-border)' : '1px solid transparent',
-      }}
-    >
-      <a href="#hero" className="flex items-center gap-3 no-underline">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary-glow), var(--accent-lime))' }}>
-          <span className="text-black font-bold text-xs">S</span>
-        </div>
-        <span className="font-bold text-[var(--text-main)] text-sm tracking-wide">SOLUCIONES DE IA</span>
-      </a>
-      <div className="hidden lg:flex items-center gap-8">
-        {NAV_LINKS.map((l) => (
-          <a key={l.href} href={l.href} className="text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] no-underline transition-colors">{l.label}</a>
-        ))}
-      </div>
-      <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary className="!px-5 !py-2.5 text-xs">
-        Iniciar Auditoría
-      </MagneticButton>
-    </nav>
-  )
-}
-
-// ============================================================
-// HERO
-// ============================================================
-
-function HeroSection() {
-  return (
-    <section id="hero" className="relative z-10 min-h-screen flex flex-col justify-center px-6 md:px-10 pt-28 pb-12">
-      <div className="max-w-7xl mx-auto w-full grid md:grid-cols-[1.15fr_0.85fr] gap-12 lg:gap-16 items-center">
-        <motion.div initial="hidden" animate="visible" variants={staggerParent} className="space-y-8">
-          <motion.div variants={fadeUp} className="glass-pill border border-[var(--accent-lime)]/30 text-[var(--text-main)]">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-lime)] animate-pulse" />
-            <span className="font-mono text-xs tracking-wider text-[var(--accent-lime)]">● THINK TANK APLICADO</span>
-            <span className="text-white/40">|</span>
-            <span className="text-xs">ALTA DIRECCIÓN &amp; CÓMPUTO SOBERANO</span>
-          </motion.div>
-          <motion.h1 variants={fadeUp} className="font-bold tracking-tighter leading-[0.95] text-[clamp(2.75rem,7.5vw,6.5rem)]">
-            <span className="block title-gradient">Inteligencia Artificial.</span>
-            <span className="block text-accent-gradient">Sentido, Control &amp; Cómputo.</span>
-          </motion.h1>
-          <motion.p variants={fadeUp} className="text-[var(--text-muted)] text-lg max-w-2xl leading-relaxed">
-            Laboratorio de pensamiento y consultoría de alta dirección. Desarrollamos gobernanza activa, análisis epistemológico y arquitecturas de IA Local-First ejecutadas en cómputo soberano de élite (RTX 5090 · 32 GB VRAM) sin fuga de datos.
-          </motion.p>
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
-            <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary className="!px-7 !py-3.5 text-xs uppercase tracking-wider font-bold">
-              Iniciar Auditoría Ejecutiva →
-            </MagneticButton>
-            <MagneticButton href="#pilares" className="!px-7 !py-3.5 text-xs uppercase tracking-wider">
-              Explorar 4 Pilares ↓
-            </MagneticButton>
-          </motion.div>
-          <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 pt-6 border-t border-white/5 max-w-md">
-            {[{ v: 4, l: 'Pilares Centrales' }, { v: 100, l: '% Local-First' }, { v: 0, l: 'Bytes Expuestos' }].map((s) => (
-              <div key={s.l}>
-                <div className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight text-[var(--text-main)] leading-none"><AnimatedCounter target={s.v} /></div>
-                <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">{s.l}</div>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative"
-        >
-          <NeonConduitAccent />
-          <div className="modern-console p-6 relative z-10">
-            <div className="flex items-center gap-2 mb-4 text-[11px] text-[var(--text-muted)]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-              <span className="ml-2 font-mono text-[var(--text-dim)]">epistemic_runtime_audit.sh</span>
-            </div>
-            <div className="space-y-2 text-[13px] font-mono">
-              {[
-                { t: '$ execute_epistemic_audit --target=corp_ai', c: 'text-[var(--accent-cyan)] font-bold' },
-                { t: '> hermeneutic_audit ..... ALINEACIÓN ACTIVA', c: 'text-[var(--text-muted)]' },
-                { t: '> cognitive_ergonomics ... AGENCIA PRESERVADA', c: 'text-[var(--text-muted)]' },
-                { t: '> talent_displacement ... 0% PÉRDIDA VALOR', c: 'text-[var(--accent-lime)]' },
-                { t: '> runtime_firewall ....... CÓMPUTO LOCAL RTX5090', c: 'text-[var(--text-main)] font-bold' },
-                { t: '  SOVEREIGNTY_SCORE ██████████ 100.0%', c: 'text-[var(--accent-cyan)] font-bold' },
-              ].map((l, i) => <div key={i} className={l.c}>{l.t}</div>)}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-5">
-            <span className="glass-pill font-mono text-xs">RTX 5090 · 32 GB VRAM</span>
-            <span className="glass-pill font-mono text-xs">Cómputo Soberano</span>
-            <span className="glass-pill font-mono text-xs">ISO 42001 · EU AI Act</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* KINETIC MARQUEE BANNER — EL GRAN MANIFIESTO */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.5 }}
-        className="mt-16 w-full overflow-hidden border-y border-white/10 bg-black/40 py-3.5 backdrop-blur-md"
-      >
-        <div className="flex w-max animate-marquee space-x-12">
-          {[0, 1].map((copyIdx) => (
-            <div key={copyIdx} className="flex items-center space-x-8 text-xs md:text-sm tracking-wide font-mono text-[var(--text-muted)] shrink-0">
-              <span className="text-[var(--accent-lime)] font-bold tracking-wider">⚡ MANIFIESTO EJECUTIVO:</span>
-              <span className="text-white font-medium">
-                «La Inteligencia Artificial no es solo un problema de ingeniería de software: es una crisis de sentido, una mutación de la experiencia humana, una reconfiguración del valor del trabajo y un desafío crítico de control.»
-              </span>
-              <span className="text-[var(--accent-cyan)]">●</span>
-              <span className="text-[var(--text-dim)] uppercase tracking-widest text-[11px]">SOLUCIONES DE IA · APPLIED THINK TANK &amp; EXECUTIVE ADVISORY</span>
-              <span className="text-[var(--accent-crimson)] font-bold">■</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// FOUR PILLARS — EL ENFOQUE TETRAÉDRICO
-// ============================================================
-
-interface Pillar {
+interface SolutionCard {
   id: string
-  number: string
+  code: string
   title: string
-  subtitle: string
-  badge: string
+  category: string
+  desc: string
+  specBullet: string[]
+  metrics: string
+  icon: 'network' | 'shield' | 'gpu' | 'eye' | 'terminal' | 'core'
   accentColor: string
-  accentBorder: string
-  summary: string
-  bullets: string[]
-  metrics: { label: string; value: string }
+  colSpan: string
 }
 
-const PILLARS_DATA: Pillar[] = [
+const SOLUTIONS_DATA: SolutionCard[] = [
   {
-    id: 'pilar-01',
-    number: '01',
-    title: 'Hermenéutica Computacional',
-    subtitle: 'Epistemología & Semántica Algorítmica',
-    badge: 'Significado vs. Tokens',
-    accentColor: 'text-[var(--accent-cyan)]',
-    accentBorder: 'hover:border-[var(--accent-cyan)]/50',
-    summary: 'Auditoría de significado profundo frente al mero cálculo estadístico probabilístico de tokens. Superamos la alucinación a través de modelos de contexto pragmático y alineación hermenéutica estricta.',
-    bullets: [
-      'Eliminación de alucinaciones críticas mediante anclaje contextual pragmático.',
-      'Alineación hermenéutica con el marco de significados y vocabulario de la empresa.',
-      'Sistemas RAG contextuales con verificación de coherencia semántica en código.',
+    id: 'sol-01',
+    code: '01//',
+    title: 'INGENIERÍA DE CONTEXTO & RAG DETERMINISTA',
+    category: 'EPISTEMOLOGÍA SEMÁNTICA // ZERO-HALLUCINATION',
+    desc: 'Arquitectura de indexación y recuperación estricta. Superamos el cálculo estadístico probabilístico mediante verificación determinista de hechos, anclaje semántico y marcos conceptuales propios.',
+    specBullet: [
+      'Eliminación de alucinaciones en documentos corporativos sensibles.',
+      'Sistemas de verificación cruzada con bases de conocimiento privadas.',
+      'Pipeline de indexación vectorial de alta densidad sin dependencias externas.',
     ],
-    metrics: { label: 'Rigor Semántico', value: '100% Determinista' },
+    metrics: 'LATENCIA: <18MS // PREC_RATE: 99.8%',
+    icon: 'network',
+    accentColor: '#0047FF',
+    colSpan: 'lg:col-span-7',
   },
   {
-    id: 'pilar-02',
-    number: '02',
-    title: 'Fenomenología de la Adopción',
-    subtitle: 'Experiencia Humana & Cognición',
-    badge: 'Humano-Algoritmo',
-    accentColor: 'text-[var(--accent-lime)]',
-    accentBorder: 'hover:border-[var(--accent-lime)]/50',
-    summary: 'Diagnóstico vivencial y fenomenológico de la relación entre el profesional y el agente de IA. Diseñamos interfaces y dinámicas cognitivas que enriquecen la agencia humana en lugar de alienarla.',
-    bullets: [
-      'Ergonomía cognitiva aplicada: prevención del agotamiento y sobrecarga mental.',
-      'Prevención de la alienación laboral y preservación activa del criterio humano.',
-      'Diseño de interfaces simbióticas calibradas para toma de decisiones asistida.',
+    id: 'sol-02',
+    code: '02//',
+    title: 'AGENTES AUTÓNOMOS MULTI-ROL',
+    category: 'ORQUESTACIÓN DETERMINISTA // WORKFLOW 24/7',
+    desc: 'Enjambres de agentes especializados construidos sobre grafos de estado (LangGraph). Ejecutan tareas analíticas, redacción técnica y decisiones operativas complejas sin intervención humana.',
+    specBullet: [
+      'Orquestación basada en máquinas de estado finito con memoria persistente.',
+      'Validación automática paso a paso antes de disparar acciones en sistemas.',
+      'Integración con ERP, CRM y bases de datos transaccionales seguras.',
     ],
-    metrics: { label: 'Agencia Humana', value: 'Preservación Activa' },
+    metrics: 'UPTIME: 99.9% // ERROR_MARGIN: 0.02%',
+    icon: 'terminal',
+    accentColor: '#FF3B1E',
+    colSpan: 'lg:col-span-5',
   },
   {
-    id: 'pilar-03',
-    number: '03',
-    title: 'Dinámica Laboral & Talento',
-    subtitle: 'Economía del Trabajo & Skills Gap',
-    badge: 'Reconfiguración del Valor',
-    accentColor: 'text-[var(--primary-glow)]',
-    accentBorder: 'hover:border-[var(--primary-glow)]/50',
-    summary: 'Monitoreo dinámico de oferta y demanda de habilidades ante la disrupción algorítmica. Identificamos competencias en depreciación frente a la prima de valor emergente: juicio directivo e intuición crítica.',
-    bullets: [
-      'Mapeo de habilidades en riesgo vs. primas de valor emergentes en su industria.',
-      'Rediseño de flujos departamentales sin destrucción traumática de capital humano.',
-      'Formación directiva en supervisión, juicio epistemológico y orquestación de agentes.',
+    id: 'sol-03',
+    code: '03//',
+    title: 'CÓMPUTO SOBERANO LOCAL-FIRST',
+    category: 'INFRAESTRUCTURA DE ÉLITE // GPU ON-PREMISE',
+    desc: 'Despliegue e inferencia ejecutados exclusivamente en hardware físico local (NVIDIA RTX 5090 · 32 GB VRAM · 192 GB RAM). Los datos nunca abandonan su perímetro de red corporativo.',
+    specBullet: [
+      'Cero dependencia de APIs de OpenAI, Anthropic o nubes públicas.',
+      'Inmunidad absoluta ante caídas de servicio externo o cambios de términos.',
+      'Modelos fundacionales optimizados: LLaMA 3.3 70B, Qwen 2.5 y Mistral.',
     ],
-    metrics: { label: 'Capital Humano', value: 'Criterio & Valor' },
+    metrics: 'LEAKAGE: 0.00% // HARDWARE: RTX 5090',
+    icon: 'gpu',
+    accentColor: '#E7FF00',
+    colSpan: 'lg:col-span-5',
   },
   {
-    id: 'pilar-04',
-    number: '04',
-    title: 'Gobernanza Activa & Runtime Security',
-    subtitle: 'Control en Código & Soberanía',
-    badge: 'Zero-Leakage & Local-First',
-    accentColor: 'text-[var(--accent-crimson)]',
-    accentBorder: 'hover:border-[var(--accent-crimson)]/50',
-    summary: 'Transición radical del «compliance en papel» a cortafuegos de ejecución deterministas en tiempo real. Mitigación activa de fugas, control estricto de agencia y despliegue en hardware local de élite (RTX 5090).',
-    bullets: [
-      'Cortafuegos deterministas de runtime y prevención activa de fugas de datos.',
-      'Límites programáticos en código a la autonomía y rango de acción de los agentes.',
-      'Soberanía absoluta: cómputo Local-First en GPU local (RTX 5090 · 32 GB VRAM).',
+    id: 'sol-04',
+    code: '04//',
+    title: 'GOBERNANZA ACTIVA & SEGURIDAD EN RUNTIME',
+    category: 'CONTROL EN CÓDIGO // ISO 42001 & EU AI ACT',
+    desc: 'Del «compliance en papel» a cortafuegos de ejecución en tiempo real. Mitigación activa de prompt injections, control programático de límites de agencia y auditoría continua de sesgos.',
+    specBullet: [
+      'Cortafuegos determinista interpuesto entre el usuario y el modelo.',
+      'Matrices de riesgo algorítmico y trazabilidad de decisiones para auditores.',
+      'Cumplimiento verificable con ISO/IEC 42001, EU AI Act y NIST AI RMF.',
     ],
-    metrics: { label: 'Soberanía Operativa', value: 'Local-First RTX 5090' },
+    metrics: 'SECURITY: ZERO-TRUST // FIREWALL: ENFORCED',
+    icon: 'shield',
+    accentColor: '#FF3B1E',
+    colSpan: 'lg:col-span-7',
+  },
+  {
+    id: 'sol-05',
+    code: '05//',
+    title: 'VISIÓN SINTÉTICA & HEURÍSTICA MULTIMODAL',
+    category: 'PERCEPCIÓN MECÁNICA // INSPECCIÓN AUTOMATIZADA',
+    desc: 'Sistemas de inspección óptica y análisis de planos técnicos, contratos digitalizados y secuencias operativas. Reconocimiento estructural sin envío de imágenes a servidores externos.',
+    specBullet: [
+      'Extracción geométrica y tabular de diagramas de ingeniería y patentes.',
+      'Clasificación y detección de anomalías en tiempo real a &gt;60 FPS.',
+      'Modelos de visión multimodales ejecutados localmente en VRAM masiva.',
+    ],
+    metrics: 'THROUGHPUT: 120 FPS // LOCAL_OCR: 99.6%',
+    icon: 'eye',
+    accentColor: '#0047FF',
+    colSpan: 'lg:col-span-6',
+  },
+  {
+    id: 'sol-06',
+    code: '06//',
+    title: 'FINE-TUNING & BRANDING ALGORÍTMICO',
+    category: 'ALINEACIÓN CULTURAL // ADAPTACIÓN LoRA',
+    desc: 'Entrenamiento privado de pesos sinápticos con su terminología, políticas y voz de marca corporativa. Su modelo dejará de sonar como un asistente genérico para convertirse en su propia entidad.',
+    specBullet: [
+      'Entrenamiento LoRA/QLoRA con pipelines de datos limpios y sintéticos.',
+      'Curaduría exhaustiva para eliminar sesgos y respuestas fuera de política.',
+      'Soberanía total sobre los pesos finales resultantes (pesos .safetensors propios).',
+    ],
+    metrics: 'ALIGNMENT: 99.8% // WEIGHTS: PROPRIETARY',
+    icon: 'core',
+    accentColor: '#E7FF00',
+    colSpan: 'lg:col-span-6',
   },
 ]
 
-function FourPillarsSection() {
+function BlueprintSolutionsGrid() {
   return (
-    <section id="pilares" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-3xl mx-auto">
-        <span className="sec-label">{"// MODELO DE INTERVENCIÓN // EL ENFOQUE TETRAÉDRICO"}</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
-          Los 4 Pilares de <span className="text-accent-gradient">Intervención Ejecutiva</span>
-        </h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-          Una respuesta holística a la transformación algorítmica. Desafiamos la visión reduccionista de la IA como mero software para articular un modelo de alto impacto en 4 dimensiones críticas de la organización.
-        </p>
-      </motion.div>
+    <section id="soluciones" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      {/* Section Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 pb-4 border-b border-white/10 font-mono">
+        <div>
+          <span className="text-[#0047FF] font-bold text-xs uppercase tracking-widest block mb-1">
+            01 // SOLUCIONES TÉCNICAS
+          </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8]">
+            ARQUITECTURA <span className="text-[#FF3B1E]">DETERMINISTA</span>
+          </h2>
+        </div>
+        <div className="text-xs text-[#6E7681] max-w-md">
+          Plataformas y servicios de alta ingeniería concebidos para mitigar riesgos, asegurar soberanía de datos y dotar de autonomía real a su operación.
+        </div>
+      </div>
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {PILLARS_DATA.map((pillar) => (
-          <motion.div key={pillar.id} variants={fadeUp} className="h-full">
-            <SpotlightCard className={`p-8 h-full flex flex-col justify-between border border-white/10 transition-all duration-300 ${pillar.accentBorder}`}>
-              <div>
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className={`font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight ${pillar.accentColor}`}>
-                      {pillar.number}
-                    </span>
-                    <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-muted)]">
-                      {pillar.badge}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] block">{pillar.metrics.label}</span>
-                    <span className={`text-xs font-mono font-bold ${pillar.accentColor}`}>{pillar.metrics.value}</span>
-                  </div>
-                </div>
+      {/* Irregular Collage Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {SOLUTIONS_DATA.map((card) => (
+          <div
+            key={card.id}
+            className={`${card.colSpan} card-glass-industrial p-6 sm:p-8 flex flex-col justify-between border-blueprint transition-colors hover:border-white/30 group`}
+          >
+            <CornerMarks />
 
-                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-1 tracking-tight">
-                  {pillar.title}
-                </h3>
-                <div className="text-xs font-mono text-[var(--text-muted)] mb-5">
-                  {pillar.subtitle}
-                </div>
-
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6">
-                  {pillar.summary}
-                </p>
-
-                <div className="space-y-2.5 pt-4 border-t border-white/10">
-                  {pillar.bullets.map((b, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-[var(--text-main)]">
-                      <span className={`${pillar.accentColor} font-bold mt-0.5`}>▸</span>
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between text-xs font-mono text-[var(--text-dim)]">
-                <span>INTERVENCIÓN_0{pillar.number}</span>
-                <span className="text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1">
-                  Protocolo Activo <span className={`${pillar.accentColor}`}>●</span>
-                </span>
-              </div>
-            </SpotlightCard>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// BRAND ENTITY — image showcase
-// ============================================================
-
-function BrandEntitySection() {
-  return (
-    <section className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-12 max-w-2xl mx-auto">
-        <span className="sec-label">Percepción Algorítmica</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">Múltiples señales. <span className="text-accent-gradient">Una sola identidad.</span></h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed">Cada punto de contacto con su empresa — voz, datos, decisiones — se funde en una entidad algorítmica coherente, entrenada para pensar y responder como usted.</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="relative h-[60vh] md:h-[70vh] rounded-[28px] overflow-hidden"
-        style={{
-          maskImage: 'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)',
-        }}
-      >
-        <Image
-          src="/images/entidad-algoritmica.png"
-          alt="Entidad algorítmica — representación visual del Branding de Algoritmo"
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 1280px"
-          className="object-cover"
-          style={{ objectPosition: '50% 30%' }}
-        />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,5,10,0.05) 0%, rgba(7,5,10,0.55) 75%, rgba(7,5,10,0.92) 100%)' }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(202,31,61,0.22), transparent 50%, rgba(255,190,0,0.16))', mixBlendMode: 'color' }} />
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// PROBLEM SECTION
-// ============================================================
-
-function ProblemSection() {
-  const problems = ['Responde fuera del tono de su marca', 'Expone datos sensibles a servidores externos', 'Sin memoria corporativa entre sesiones', 'Inventa información (alucinaciones críticas)', 'Ignora políticas internas y procesos propios', 'Diluye y estandariza su identidad corporativa']
-  const solutions = ['Voz corporativa exacta, calibrada a su marca', 'Datos procesados en su infraestructura privada', 'Memoria de marca persistente y contextual', 'Grounded en su base de conocimiento real', 'Guardrails que respetan sus políticas internas', 'Coherencia de identidad en cada respuesta']
-  return (
-    <section id="problema" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="mb-14 max-w-2xl">
-        <span className="sec-label">El problema que destruye su marca</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold mb-4 leading-tight tracking-tighter">La IA genérica no conoce <span className="text-accent-gradient">su empresa</span></h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed max-w-2xl">Adoptar un modelo de IA sin personalizarlo es como contratar a alguien que nunca leyó el manual, no conoce sus clientes y habla sin filtro corporativo.</p>
-      </motion.div>
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerParent} className="grid md:grid-cols-2 gap-6">
-        <motion.div variants={fadeUp}>
-          <SpotlightCard className="p-7 h-full">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Sin Branding de Algoritmo</span>
-            </div>
-            <div className="space-y-3">
-              {problems.map((p) => (
-                <div key={p} className="flex items-start gap-3 text-sm text-[var(--text-muted)]"><span className="text-red-400 font-bold">✕</span>{p}</div>
-              ))}
-            </div>
-          </SpotlightCard>
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <SpotlightCard className="p-7 h-full">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--success)]">Con Branding de Algoritmo™</span>
-            </div>
-            <div className="space-y-3">
-              {solutions.map((s) => (
-                <div key={s} className="flex items-start gap-3 text-sm text-[var(--text-main)]"><span className="text-[var(--success)] font-bold">✓</span>{s}</div>
-              ))}
-            </div>
-          </SpotlightCard>
-        </motion.div>
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// METHODOLOGY SECTION
-// ============================================================
-
-function MethodologySection() {
-  const steps = [
-    { num: '01', title: 'Diagnóstico de Ecosistema', desc: 'Auditamos su identidad corporativa, procesos internos, base de conocimiento y flujos de datos. Identificamos qué debe saber la IA, cómo debe hablar y qué nunca debe decir.' },
-    { num: '02', title: 'Composición Algorítmica', desc: 'Diseñamos la arquitectura del modelo: selección del modelo base, estrategia de datos, topología de guardrails éticos y política de respuestas, antes de escribir una sola línea de código.' },
-    { num: '03', title: 'Entrenamiento Privado', desc: 'Fine-tuning con sus datos reales usando LoRA/QLoRA en nuestra infraestructura de élite (RTX 5090). Los datos nunca abandonan el entorno de confianza.' },
-    { num: '04', title: 'Despliegue y Monitoreo', desc: 'Integración en sus sistemas (web, WhatsApp, ERP, CRM), monitoreo de coherencia y ajuste continuo. Evoluciona con su empresa, nunca se congela.' },
-  ]
-  return (
-    <section id="metodologia" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="mb-14 max-w-2xl">
-        <span className="sec-label">Metodología Propietaria</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter">Sastrería <span className="text-accent-gradient">Algorítmica</span></h2>
-      </motion.div>
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerParent} className="grid md:grid-cols-2 gap-6">
-        {steps.map((step) => (
-          <motion.div key={step.num} variants={fadeUp}>
-            <SpotlightCard className="p-7 h-full">
-              <div className="font-[family-name:var(--font-space-grotesk)] text-5xl font-bold tracking-tight text-white/10 mb-3">{step.num}</div>
-              <h3 className="font-bold text-[var(--text-main)] text-xl mb-2 tracking-tight">{step.title}</h3>
-              <p className="text-[var(--text-muted)] text-base leading-relaxed">{step.desc}</p>
-            </SpotlightCard>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// INFRASTRUCTURE — BENTO GRID
-// ============================================================
-
-function InfrastructureSection() {
-  return (
-    <section id="infra" className="py-24 px-6 md:px-10 max-w-7xl mx-auto z-10 relative">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="mb-16 max-w-2xl">
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold mb-4 leading-tight tracking-tighter">Poder de <span className="text-accent-gradient">Cómputo Local</span></h2>
-        <p className="text-gray-400 text-lg leading-relaxed">Ejecutamos despliegues Local-First para garantizar soberanía de datos total en entornos legales y corporativos regulados.</p>
-      </motion.div>
-
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-60px' }}
-        variants={staggerParent}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[280px] md:auto-rows-[300px]"
-      >
-        {/* GPU */}
-        <motion.div variants={fadeUp} className="md:col-span-2">
-          <SpotlightCard className="p-8 h-full flex flex-col justify-between">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] mb-3">Aceleración IA · VRAM Masiva</div>
-              <div className="flex items-end gap-3 mb-2">
-                <div className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight">RTX 5090</div>
-                <span className="tag-pill">Flagship 2025</span>
-              </div>
-              <p className="text-[var(--text-muted)] text-sm">Optimizada para modelos fundacionales de gran escala. Entrenamiento e inferencia a máxima velocidad.</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[{ v: '32 GB', l: 'VRAM' }, { v: '~3,352', l: 'GB/s' }, { v: '~92 TFLOPS', l: 'FP16' }, { v: 'Local', l: 'Inferencia' }].map((s) => (
-                <div key={s.l} className="rounded-lg p-3 bg-white/5 border border-white/5">
-                  <div className="font-bold text-[var(--secondary-glow)]">{s.v}</div>
-                  <div className="text-[11px] text-[var(--text-muted)]">{s.l}</div>
+              {/* Card Meta Header */}
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 font-mono text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#FF3B1E]">{card.code}</span>
+                  <span className="text-[#6E7681] text-[11px] truncate">{card.category}</span>
                 </div>
-              ))}
-            </div>
-          </SpotlightCard>
-        </motion.div>
-
-        {/* RAM */}
-        <motion.div variants={fadeUp}>
-          <SpotlightCard className="p-8 h-full flex flex-col justify-between">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--primary-glow)] mb-3">Memoria RAM</div>
-            <div className="flex items-baseline gap-2">
-              <div className="font-[family-name:var(--font-space-grotesk)] font-bold tracking-tighter text-[clamp(40px,6vw,64px)] leading-none"><AnimatedCounter target={192} /></div>
-              <div className="font-[family-name:var(--font-space-grotesk)] text-xl font-bold text-[var(--primary-glow)]">GB</div>
-            </div>
-            <div className="text-[var(--text-muted)] text-sm">DDR5 Ultra-Rápida — modelos de 70B+ en RAM completa.</div>
-          </SpotlightCard>
-        </motion.div>
-
-        {/* CPU */}
-        <motion.div variants={fadeUp}>
-          <SpotlightCard className="p-8 h-full flex flex-col justify-between">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] mb-3">Procesamiento</div>
-            <div className="font-[family-name:var(--font-space-grotesk)] text-3xl font-bold leading-tight tracking-tight">Ryzen 9<br />9950X</div>
-            <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-[var(--text-muted)]">Núcleos / Hilos</span><span className="font-bold">16 / 32</span></div>
-              <div className="flex justify-between"><span className="text-[var(--text-muted)]">Boost</span><span className="font-bold">5.7 GHz</span></div>
-            </div>
-          </SpotlightCard>
-        </motion.div>
-
-        {/* Storage */}
-        <motion.div variants={fadeUp} className="md:col-span-2">
-          <SpotlightCard className="p-8 h-full flex flex-col justify-between">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--primary-glow)] mb-3">Almacenamiento NVMe</div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <div className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold tracking-tight">7</div>
-                <div className="font-[family-name:var(--font-space-grotesk)] text-xl font-bold text-[var(--primary-glow)]">TB</div>
-              </div>
-              <p className="text-[var(--text-muted)] text-sm">PCIe Gen 5 — velocidad extrema, redundancia y cifrado total.</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[{ v: '~14 GB/s', l: 'Lectura' }, { v: 'Air-Gapped', l: 'Privacidad' }, { v: 'RAID', l: 'Redundancia' }, { v: 'AES-256', l: 'Cifrado' }].map((s) => (
-                <div key={s.l} className="rounded-lg p-3 bg-white/5 border border-white/5">
-                  <div className="font-bold text-sm">{s.v}</div>
-                  <div className="text-[11px] text-[var(--text-muted)]">{s.l}</div>
+                <div className="p-1.5 bg-white/5 border border-white/10">
+                  {card.icon === 'network' && <PixelNetworkIcon />}
+                  {card.icon === 'shield' && <PixelShieldIcon />}
+                  {card.icon === 'gpu' && <PixelGpuIcon />}
+                  {card.icon === 'eye' && <PixelEyeIcon />}
+                  {card.icon === 'terminal' && <PixelTerminalIcon />}
+                  {card.icon === 'core' && <PixelCoreIcon className="w-5 h-5 text-[#E7FF00]" />}
                 </div>
-              ))}
-            </div>
-          </SpotlightCard>
-        </motion.div>
-      </motion.div>
-
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-8">
-        <SpotlightCard className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] mb-1">Certificación de Soberanía</div>
-            <p className="font-bold">Sus datos nunca abandonan su entorno de confianza.</p>
-            <p className="text-[var(--text-muted)] text-sm">Procesamiento 100% local · Sin API calls externas · Auditoría completa disponible</p>
-          </div>
-          <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary className="shrink-0">Solicitar Demostración</MagneticButton>
-        </SpotlightCard>
-      </motion.div>
-    </section>
-  )
-}
-
-// ============================================================
-// ARCHITECTURE PLANS
-// ============================================================
-
-function ArchitecturePlansSection() {
-  const tiers = [
-    {
-      id: 'local', badge: 'Soberanía Total', title: 'Despliegue Local-First', tagline: 'Cero fuga · Cero compromiso', accent: 'var(--primary-glow)', featured: false,
-      desc: 'Para datos altamente sensibles (legal, financiero, salud). Ejecutamos la IA directamente en servidores físicos dedicados dentro de su infraestructura.',
-      features: ['On-premise exclusivo', 'Air-gapped garantizado', 'Sin ninguna llamada externa', 'Auditoría forense disponible'], client: 'Sectores regulados',
-    },
-    {
-      id: 'hybrid', badge: 'Recomendado', title: 'Escalabilidad Híbrida', tagline: 'Cloud-Local Sync · Equilibrio óptimo', accent: 'var(--secondary-glow)', featured: true,
-      desc: 'La opción más equilibrada para la mayoría de empresas. Procesamiento crítico on-premise, cargas generales y escalado de tráfico en Cloud seguro.',
-      features: ['Procesamiento crítico: local', 'Cargas generales: Cloud seguro', 'Auto-scaling elástico', 'Balance costo-rendimiento óptimo'], client: 'La mayoría de clientes',
-    },
-    {
-      id: 'cloud', badge: 'Alto Volumen', title: 'Orquestación Multi-Agente', tagline: 'Vertex AI · GCP · Elasticidad total', accent: 'var(--tertiary-glow)', featured: false,
-      desc: 'Para operaciones de alto volumen que requieren elasticidad máxima. Arquitectura multi-agente en entornos Cloud enterprise con orquestación avanzada.',
-      features: ['Vertex AI + Google Cloud', 'Arquitectura multi-agente', 'Elasticidad automática', 'Logging y observabilidad'], client: 'Operaciones masivas',
-    },
-  ]
-  return (
-    <section id="arquitectura" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-14 max-w-2xl mx-auto">
-        <span className="sec-label">Planes de Arquitectura de Soluciones</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">Escalabilidad <span className="text-accent-gradient">Inteligentemente Híbrida</span></h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed">Mantener todo 100% local no siempre es costo-eficiente. Elegimos la arquitectura exacta que maximiza su ROI sin comprometer la seguridad.</p>
-      </motion.div>
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerParent} className="grid md:grid-cols-3 gap-6">
-        {tiers.map((tier) => (
-          <motion.div key={tier.id} variants={fadeUp}>
-            <SpotlightCard className={`p-7 h-full flex flex-col gap-5 ${tier.featured ? 'md:-translate-y-3' : ''}`}>
-              <span className="tag-pill self-start" style={{ borderColor: tier.accent, color: tier.accent }}>{tier.badge}</span>
-              <div>
-                <h3 className="font-bold text-2xl mb-1 tracking-tight">{tier.title}</h3>
-                <div className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: tier.accent }}>{tier.tagline}</div>
-                <p className="text-[var(--text-muted)] text-base leading-relaxed">{tier.desc}</p>
               </div>
-              <div className="space-y-2 flex-1">
-                {tier.features.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tier.accent, boxShadow: `0 0 6px ${tier.accent}` }} />
-                    {f}
+
+              {/* Title & Description */}
+              <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-[#EDECE8] mb-3 group-hover:text-[#E7FF00] transition-colors">
+                {card.title}
+              </h3>
+
+              <p className="text-[#EDECE8]/75 text-sm leading-relaxed mb-6 font-normal">
+                {card.desc}
+              </p>
+
+              {/* Technical Specifications Bullets */}
+              <div className="space-y-2 pt-4 border-t border-white/10 font-mono text-xs text-[#EDECE8]/90 mb-6">
+                {card.specBullet.map((bullet, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <span className="text-[#0047FF] font-bold">▪</span>
+                    <span>{bullet}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-4 border-t border-white/5">
-                <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mb-3">{tier.client}</div>
-                <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary={tier.featured} className="w-full justify-center">
-                  {tier.featured ? 'Consultar Ahora →' : 'Consultar'}
-                </MagneticButton>
-              </div>
-            </SpotlightCard>
-          </motion.div>
+            </div>
+
+            {/* Bottom Technical Metric Tag */}
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between font-mono text-xs">
+              <span className="text-[#6E7681]">{card.metrics}</span>
+              <span className="text-[#E7FF00] group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   )
 }
 
 // ============================================================
-// SERVICES CONSOLE
+// URBAN RAW MANIFESTO & METRICS SECTION
 // ============================================================
 
-function ServicesConsole() {
-  const [activeId, setActiveId] = useState(servicesData[0].id)
-  const active = servicesData.find((s) => s.id === activeId) ?? servicesData[0]
-
+function UrbanManifestoSection() {
   return (
-    <section id="servicios" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-14 max-w-xl mx-auto">
-        <span className="sec-label">Catálogo Completo de Servicios</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter">Consola de <span className="text-accent-gradient">Soluciones</span></h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed mt-3">Explore cada módulo de nuestra oferta técnica.</p>
-      </motion.div>
+    <section className="py-20 relative bg-[#0E1013] border-y-4 border-[#FF3B1E] overflow-hidden">
+      {/* Top Hazard Stripes Accent */}
+      <div className="hazard-stripes h-3 w-full" />
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={fadeUp}>
-        <div className="modern-console flex flex-col lg:flex-row overflow-hidden min-h-[560px]">
-          {/* Sidebar */}
-          <div className="lg:w-72 shrink-0 border-b lg:border-b-0 lg:border-r border-white/10 p-4 flex flex-col">
-            <div className="text-[10px] uppercase tracking-[3px] text-[var(--text-muted)] mb-3 px-2">/SYS/MODULES</div>
-            <div className="space-y-1.5 flex-1">
-              {servicesData.map((s, i) => (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveId(s.id)}
-                  className={`console-tab ${activeId === s.id ? 'active' : ''}`}
-                >
-                  <span className="console-tab-index">{String(i + 1).padStart(2, '0')}.</span>
-                  <span className="truncate">{s.file}</span>
-                </button>
-              ))}
-            </div>
-            <div className="border-t border-white/10 pt-3 mt-3 px-2 space-y-1.5 text-[11px]">
-              <a href="mailto:ssolucionesdeia@gmail.com" className="block truncate text-[var(--text-muted)] hover:text-[var(--text-main)] no-underline">✉ ssolucionesdeia@gmail.com</a>
-              <a href="https://wa.me/573108688648" target="_blank" rel="noopener noreferrer" className="block text-[var(--text-muted)] hover:text-[var(--text-main)] no-underline">📱 +57 3108688648</a>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* SVG Barcode & Coordinates */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-8 border-b border-white/15 font-mono text-xs text-[#6E7681]">
+          <div className="flex items-center gap-3">
+            {/* SVG Barcode */}
+            <svg className="w-32 h-6 fill-white/80 pixel-art" viewBox="0 0 100 20">
+              <rect x="0" y="0" width="3" height="20" />
+              <rect x="5" y="0" width="1" height="20" />
+              <rect x="8" y="0" width="4" height="20" />
+              <rect x="14" y="0" width="2" height="20" />
+              <rect x="18" y="0" width="1" height="20" />
+              <rect x="22" y="0" width="5" height="20" />
+              <rect x="29" y="0" width="2" height="20" />
+              <rect x="33" y="0" width="1" height="20" />
+              <rect x="36" y="0" width="4" height="20" />
+              <rect x="42" y="0" width="1" height="20" />
+              <rect x="46" y="0" width="3" height="20" />
+              <rect x="52" y="0" width="2" height="20" />
+              <rect x="56" y="0" width="5" height="20" />
+              <rect x="63" y="0" width="1" height="20" />
+              <rect x="66" y="0" width="3" height="20" />
+              <rect x="72" y="0" width="2" height="20" />
+              <rect x="76" y="0" width="4" height="20" />
+              <rect x="82" y="0" width="1" height="20" />
+              <rect x="86" y="0" width="6" height="20" />
+              <rect x="94" y="0" width="2" height="20" />
+              <rect x="98" y="0" width="2" height="20" />
+            </svg>
+            <span className="text-[#EDECE8]">SPEC_DOC_ID: #72E9CF6_V4</span>
           </div>
-
-          {/* Main display */}
-          <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-                  <div>
-                    <h3 className="text-3xl font-bold mb-2 tracking-tight">{active.name}</h3>
-                    <TagPills tags={active.tags} />
-                  </div>
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.3)] text-[var(--success)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-                    {active.nodeStatus}
-                  </span>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-5">
-                  <div className="console-output-card text-[13px] text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: 'var(--font-inter)' }}>
-                    <span className="text-[10px] uppercase tracking-[2px] text-[var(--secondary-glow)] mb-1">STDOUT_DESCRIPTION</span>
-                    {active.desc}
-                  </div>
-                  <div className="console-output-card">
-                    <span className="text-[10px] uppercase tracking-[2px] text-[var(--primary-glow)] mb-1">/SYS/STATUS</span>
-                    <div className="text-[var(--secondary-glow)]">$ init_audit --framework=&quot;{active.complianceMarco}&quot;</div>
-                    <div>&gt; hash_addr: <span className="text-[var(--text-main)]">{active.hashAddress}</span></div>
-                    <div>&gt; integridad: <span className="text-[var(--text-main)]">{active.integrityLevel}</span></div>
-                    <div>&gt; riesgo: <span className="text-[var(--text-main)]">{active.threatAssessment}</span></div>
-                    <div className="text-[var(--success)]">&gt; estado: {active.nodeStatus}</div>
-                    <div className="pt-3 mt-2 border-t border-white/10 flex flex-col sm:flex-row gap-2">
-                      <a href="mailto:ssolucionesdeia@gmail.com" className="flex-1 text-center py-2.5 rounded-lg text-xs font-bold no-underline text-black" style={{ background: 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))' }}>Iniciar Consulta</a>
-                      <a href="https://wa.me/573108688648" target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-2.5 rounded-lg text-xs font-bold no-underline border border-white/15 text-[var(--text-main)]">WhatsApp</a>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+          <div>
+            <span>{`LAT: 04°36'35"N // LON: 74°04'54"W // SOVEREIGN_ENCLAVE`}</span>
           </div>
         </div>
-      </motion.div>
+
+        {/* Massive Suprematist Text Manifesto */}
+        <div className="my-8">
+          <blockquote className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight leading-[0.98] text-[#EDECE8]">
+            «LA INTELIGENCIA ARTIFICIAL NO ES UN PROBLEMA DE SOFTWARE: ES UNA <span className="bg-[#FF3B1E] text-[#EDECE8] px-2">CRISIS DE SENTIDO</span>, UNA MUTACIÓN COGNITIVA Y UN DESAFÍO CRÍTICO DE <span className="bg-[#0047FF] text-[#EDECE8] px-2">CONTROL DETERMINISTA</span>.»
+          </blockquote>
+        </div>
+
+        {/* 4 Brutalist Solid Metric Blocks */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-12 border-t border-white/15">
+          <div className="p-6 bg-[#14171D] border border-white/10 relative">
+            <CornerMarks />
+            <div className="font-display font-black text-4xl sm:text-5xl text-[#E7FF00]">0 BYTES</div>
+            <div className="font-mono text-xs uppercase text-[#EDECE8] font-bold mt-2">FUGA EXTERNA</div>
+            <div className="font-mono text-[11px] text-[#6E7681] mt-1">Cómputo local aislado sin telemetría de nube.</div>
+          </div>
+
+          <div className="p-6 bg-[#14171D] border border-white/10 relative">
+            <CornerMarks />
+            <div className="font-display font-black text-4xl sm:text-5xl text-[#FF3B1E]">100%</div>
+            <div className="font-mono text-xs uppercase text-[#EDECE8] font-bold mt-2">SOBERANÍA LOCAL</div>
+            <div className="font-mono text-[11px] text-[#6E7681] mt-1">NVIDIA RTX 5090 con 32 GB VRAM masiva propia.</div>
+          </div>
+
+          <div className="p-6 bg-[#14171D] border border-white/10 relative">
+            <CornerMarks />
+            <div className="font-display font-black text-4xl sm:text-5xl text-[#0047FF]">&lt;24 MS</div>
+            <div className="font-mono text-xs uppercase text-[#EDECE8] font-bold mt-2">LATENCIA DE RUNTIME</div>
+            <div className="font-mono text-[11px] text-[#6E7681] mt-1">Inferencia acelerada sin cuellos de botella de red.</div>
+          </div>
+
+          <div className="p-6 bg-[#14171D] border border-white/10 relative">
+            <CornerMarks />
+            <div className="font-display font-black text-4xl sm:text-5xl text-[#EDECE8]">ISO 42001</div>
+            <div className="font-mono text-xs uppercase text-[#EDECE8] font-bold mt-2">GOBERNANZA EN CÓDIGO</div>
+            <div className="font-mono text-[11px] text-[#6E7681] mt-1">Guardrails deterministas auditables y normativos.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Hazard Stripes Accent */}
+      <div className="hazard-stripes-canary h-3 w-full" />
     </section>
   )
 }
 
 // ============================================================
-// PORTFOLIO SECTION (Casos de Éxito / Proyectos Reales)
+// TETRAHEDRAL ARCHITECTURE (THE 4 PILLARS UNDER BLUEPRINT LENS)
 // ============================================================
 
-interface PortfolioProject {
+const PILLARS_BLUEPRINT = [
+  {
+    num: '01',
+    code: 'HERM_COMP',
+    title: 'HERMENÉUTICA COMPUTACIONAL',
+    subtitle: 'Epistemología & Semántica Algorítmica',
+    focus: 'Significado vs. Tokens Estadísticos',
+    desc: 'Auditoría de significado profundo frente al mero cálculo estadístico probabilístico de palabras contiguas. Superamos las alucinaciones mediante modelos de contexto pragmático y anclaje determinista en bases de conocimiento propietarias.',
+    accent: '#0047FF',
+    coords: 'X: 10.22 // Y: 44.11',
+  },
+  {
+    num: '02',
+    code: 'PHENOM_ADOPT',
+    title: 'FENOMENOLOGÍA DE LA ADOPCIÓN',
+    subtitle: 'Experiencia Humana & Ergonomía Cognitiva',
+    focus: 'Agencia Humana vs. Alienación Algorítmica',
+    desc: 'Diagnóstico vivencial y fenomenológico de la relación entre el profesional y el agente de IA. Diseñamos interfaces y dinámicas cognitivas que enriquecen la agencia directiva y el criterio en lugar de adormecerlo.',
+    accent: '#FF3B1E',
+    coords: 'X: 12.80 // Y: 88.34',
+  },
+  {
+    num: '03',
+    code: 'LABOR_DYN',
+    title: 'DINÁMICA LABORAL & TALENTO',
+    subtitle: 'Economía del Trabajo & Skills Gap',
+    focus: 'Habilidades en Depreciación vs. Prima de Criterio',
+    desc: 'Monitoreo dinámico de oferta y demanda laboral ante la disrupción algorítmica. Mapeamos habilidades en depreciación frente a la prima de valor emergente: juicio crítico, intuición y orquestación de equipos sintéticos.',
+    accent: '#E7FF00',
+    coords: 'X: 55.40 // Y: 22.09',
+  },
+  {
+    num: '04',
+    code: 'ACT_GOV',
+    title: 'GOBERNANZA ACTIVA & RUNTIME SECURITY',
+    subtitle: 'Control en Código & Soberanía de Cómputo',
+    focus: 'Cortafuegos en Tiempo Real vs. Papel Normativo',
+    desc: 'Transición radical del cumplimiento en papel (ISO 42001 meramente declarativo) a cortafuegos de ejecución en tiempo real en código determinista. Aislamiento estricto en GPU local de élite (RTX 5090).',
+    accent: '#0047FF',
+    coords: 'X: 99.12 // Y: 04.55',
+  },
+]
+
+function TetrahedralArchitectureSection() {
+  return (
+    <section id="arquitectura" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 pb-4 border-b border-white/10 font-mono">
+        <div>
+          <span className="text-[#E7FF00] font-bold text-xs uppercase tracking-widest block mb-1">
+            02 // ARQUITECTURA DE INTERVENCIÓN
+          </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8]">
+            EL ENFOQUE <span className="text-[#0047FF]">TETRAÉDRICO</span>
+          </h2>
+        </div>
+        <div className="text-xs text-[#6E7681] max-w-md">
+          Estructura de 4 dimensiones críticas para una transformación algorítmica sin crisis de control ni alienación humana.
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {PILLARS_BLUEPRINT.map((p) => (
+          <div
+            key={p.num}
+            className="card-glass-industrial p-8 border-blueprint flex flex-col justify-between group hover:border-white/40 transition-colors"
+          >
+            <CornerMarks />
+
+            <div>
+              <div className="flex items-center justify-between pb-3 mb-5 border-b border-white/10 font-mono text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-display font-black text-2xl text-[#EDECE8]">{p.num}</span>
+                  <span className="text-[#6E7681]">{`// ${p.code}`}</span>
+                </div>
+                <span className="text-[11px] text-[#E7FF00] font-mono">{p.coords}</span>
+              </div>
+
+              <h3 className="font-display font-black text-2xl uppercase tracking-tight text-[#EDECE8] mb-1">
+                {p.title}
+              </h3>
+
+              <div className="font-mono text-xs text-[#0047FF] mb-4">
+                {p.subtitle}
+              </div>
+
+              <div className="inline-block px-2.5 py-1 bg-white/5 border border-white/10 font-mono text-[11px] text-[#EDECE8] mb-5">
+                FOCO: <span className="text-[#E7FF00]">{p.focus}</span>
+              </div>
+
+              <p className="text-sm text-[#EDECE8]/80 leading-relaxed font-normal">
+                {p.desc}
+              </p>
+            </div>
+
+            <div className="pt-6 mt-6 border-t border-white/10 flex items-center justify-between font-mono text-xs text-[#6E7681]">
+              <span>SPEC_STATUS: IMPLEMENTADO_EN_CÓDIGO</span>
+              <span className="text-[#EDECE8] font-bold">● V4.2</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// HARDWARE & LOCAL COMPUTE SPECS (BENTO GRID)
+// ============================================================
+
+function HardwareSpecSection() {
+  return (
+    <section id="modelos" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 pb-4 border-b border-white/10 font-mono">
+        <div>
+          <span className="text-[#FF3B1E] font-bold text-xs uppercase tracking-widest block mb-1">
+            03 // CÓMPUTO & MODELOS
+          </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8]">
+            ESPECIFICACIONES DE <span className="text-[#E7FF00]">HARDWARE</span>
+          </h2>
+        </div>
+        <div className="text-xs text-[#6E7681] max-w-md">
+          Infraestructura de cómputo local de densidad industrial. Inferencia y afinamiento de modelos fundacionales con soberanía matemática y física absoluta.
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[280px]">
+        {/* Flagship GPU Box (2 cols) */}
+        <div className="md:col-span-2 card-glass-industrial p-8 flex flex-col justify-between border-blueprint">
+          <CornerMarks />
+          <div>
+            <div className="flex items-center justify-between pb-2 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+              <span className="text-[#E7FF00] font-bold">ACELERACIÓN DE TENSORS // VRAM MASIVA</span>
+              <span>PCIe Gen 5.0 x16</span>
+            </div>
+            <div className="flex items-baseline gap-4 mt-4">
+              <h3 className="font-display font-black text-4xl sm:text-6xl text-[#EDECE8]">RTX 5090</h3>
+              <span className="bg-[#FF3B1E] text-[#EDECE8] px-2 py-0.5 font-mono text-xs font-bold">FLAGSHIP 2025</span>
+            </div>
+            <p className="text-sm text-[#EDECE8]/80 mt-2 max-w-xl">
+              Arquitectura de última generación diseñada para inferencia de modelos de más de 70B de parámetros en cuantizaciones de alta precisión sin recurrir a la nube.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/10 font-mono">
+            <div className="p-3 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">VRAM DEDICADA</div>
+              <div className="text-xl font-bold text-[#E7FF00]">32 GB</div>
+              <div className="text-[10px] text-[#6E7681]">GDDR7</div>
+            </div>
+            <div className="p-3 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">ANCHO DE BANDA</div>
+              <div className="text-xl font-bold text-[#0047FF]">~3,352 GB/s</div>
+              <div className="text-[10px] text-[#6E7681]">Ultra-Low Latency</div>
+            </div>
+            <div className="p-3 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">POTENCIA TENSOR</div>
+              <div className="text-xl font-bold text-[#FF3B1E]">~92.4</div>
+              <div className="text-[10px] text-[#6E7681]">TFLOPS FP16</div>
+            </div>
+            <div className="p-3 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">MODO EJECUCIÓN</div>
+              <div className="text-xl font-bold text-[#EDECE8]">LOCAL</div>
+              <div className="text-[10px] text-[#6E7681]">Zero Cloud Exposure</div>
+            </div>
+          </div>
+        </div>
+
+        {/* System Memory Box */}
+        <div className="card-glass-industrial p-8 flex flex-col justify-between border-blueprint">
+          <CornerMarks />
+          <div>
+            <div className="pb-2 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+              MEMORIA DE SISTEMA // DDR5
+            </div>
+            <div className="font-display font-black text-6xl text-[#EDECE8] mt-4">192 GB</div>
+            <div className="font-mono text-sm text-[#0047FF] font-bold mt-1">DDR5 ULTRA-SPEED</div>
+            <p className="text-xs text-[#EDECE8]/70 mt-2">
+              Permite cargar en RAM completa bases vectoriales gigantescas y modelos masivos antes de su transferencia a VRAM.
+            </p>
+          </div>
+          <div className="font-mono text-[11px] text-[#6E7681] pt-3 border-t border-white/10">
+            ECC / REDUNDANCIA ACTIVA
+          </div>
+        </div>
+
+        {/* CPU Host Processor */}
+        <div className="card-glass-industrial p-8 flex flex-col justify-between border-blueprint">
+          <CornerMarks />
+          <div>
+            <div className="pb-2 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+              PROCESADOR HOST // x86_64
+            </div>
+            <div className="font-display font-black text-4xl text-[#EDECE8] mt-3">RYZEN 9 9950X</div>
+            <div className="font-mono text-sm text-[#FF3B1E] font-bold mt-1">16 NÚCLEOS / 32 HILOS</div>
+            <p className="text-xs text-[#EDECE8]/70 mt-2">
+              Hasta 5.7 GHz boost para preprocesamiento intensivo de embeddings y orquestación de llamadas asíncronas a gran escala.
+            </p>
+          </div>
+          <div className="font-mono text-[11px] text-[#6E7681] pt-3 border-t border-white/10">
+            CACHE L3: 64MB // AVX-512
+          </div>
+        </div>
+
+        {/* NVMe Storage Array (2 cols) */}
+        <div className="md:col-span-2 card-glass-industrial p-8 flex flex-col justify-between border-blueprint">
+          <CornerMarks />
+          <div>
+            <div className="flex items-center justify-between pb-2 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+              <span>ALMACENAMIENTO NVME // CIFRADO EN REPOSO</span>
+              <span>PCIe Gen 5.0</span>
+            </div>
+            <div className="flex items-baseline gap-4 mt-3">
+              <div className="font-display font-black text-5xl text-[#EDECE8]">7 TB</div>
+              <span className="font-mono text-sm text-[#E7FF00]">MATRIZ NVME GEN 5</span>
+            </div>
+            <p className="text-xs text-[#EDECE8]/70 mt-1 max-w-xl">
+              Tasas de transferencia sostenidas de hasta 14,000 MB/s para carga instantánea de checkpoints de modelos (.safetensors) y colecciones vectoriales.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10 font-mono text-xs">
+            <div className="p-2 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">CIFRADO</div>
+              <div className="text-sm font-bold text-[#EDECE8]">AES-XTS 256</div>
+            </div>
+            <div className="p-2 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">LECTURA SEC</div>
+              <div className="text-sm font-bold text-[#0047FF]">14,000 MB/s</div>
+            </div>
+            <div className="p-2 bg-black/40 border border-white/10">
+              <div className="text-[10px] text-[#6E7681]">MODELOS ACTIVOS</div>
+              <div className="text-sm font-bold text-[#E7FF00]">LLaMA 3.3 · Mistral</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// BLUEPRINT PORTFOLIO / CASOS EN PRODUCCIÓN (PRESERVING URLS & IMAGES)
+// ============================================================
+
+interface ProjectSpec {
   id: string
   title: string
   subtitle: string
@@ -1167,206 +964,200 @@ interface PortfolioProject {
   badge: string
   tags: string
   description: string
-  highlights: { label: string; value: string }[]
+  metrics: { label: string; value: string }[]
   ctaText: string
 }
 
-const portfolioProjects: PortfolioProject[] = [
+const PORTFOLIO_PROJECTS: ProjectSpec[] = [
   {
     id: 'paz-ortega',
-    title: 'PAZ ORTEGA',
-    subtitle: 'Gobernanza de IA & Legal Tech',
-    category: 'Plataforma Legal Tech · Agente Autónomo',
+    title: 'Paz Ortega IA Legal',
+    subtitle: 'Plataforma Legal Tech & Asistente Autónomo',
+    category: 'SISTEMA LEGAL TECH // AGENTE AUTÓNOMO EN PRODUCCIÓN',
     url: 'https://paz-ortega-ia-legal.web.app/',
     displayUrl: 'paz-ortega-ia-legal.web.app',
     previewImage: '/portfolio/paz-ortega-preview.png',
     brandAsset: '/portfolio/paz-ortega-avatar.png',
-    badge: 'Producción Activa',
-    tags: '[LEGAL TECH] [AGENTE IA] [ISO 42001] [EU AI ACT] [RAG PRIVADO]',
-    description: 'Plataforma empresarial de gobernanza en IA que traduce marcos normativos complejos a código operativo. Integra un agente de IA interactivo ("Paz") entrenado con jurisprudencia y marcos regulatorios (EU AI Act, ISO/IEC 42001, NIST RMF) para asistir a trabajadores y corporaciones en tiempo real sin fuga de datos.',
-    highlights: [
-      { label: 'Agente Jurídico', value: 'IA Autónoma RAG' },
-      { label: 'Cumplimiento', value: 'ISO/IEC 42001' },
-      { label: 'Infraestructura', value: 'Cloud Seguro & Local' },
+    badge: '● SYS_DEPLOYED: LIVE',
+    tags: '[LEGAL_TECH] [AGENTE_IA_AUTÓNOMO] [ISO_42001] [EU_AI_ACT] [RAG_PRIVADO]',
+    description: 'Plataforma empresarial de gobernanza en IA que traduce marcos normativos complejos a código operativo determinista. Integra a "Paz", una agente de IA interactiva entrenada con jurisprudencia y directivas regulatorias para asistir en tiempo real a corporaciones sin fuga de datos.',
+    metrics: [
+      { label: 'ARQUITECTURA', value: 'RAG DETERMINISTA' },
+      { label: 'CUMPLIMIENTO', value: 'ISO/IEC 42001' },
+      { label: 'ENTORNO', value: 'PRODUCCIÓN ACTIVA' },
     ],
-    ctaText: 'Visitar Plataforma ↗',
+    ctaText: 'ABRIR_PLATAFORMA_WEB ↗',
   },
   {
     id: 'el-escuchante',
     title: 'El Escuchante',
     subtitle: 'Escucha Filosófica & Acompañamiento',
-    category: 'Diseño Web de Alta Gama · Algoritmo de Sentido',
+    category: 'DISEÑO EDITORIAL DE ALTA GAMA // ALGORITMO DE SENTIDO',
     url: 'https://www.elescuchante.com/',
     displayUrl: 'www.elescuchante.com',
     previewImage: '/portfolio/elescuchante-preview.png',
     brandAsset: '/portfolio/elescuchante-logo.png',
-    badge: 'Producción Activa',
-    tags: '[DISEÑO WEB] [BRANDING] [ALGORITMO DE ESCUCHA] [NEXT.JS] [CONVERSIÓN]',
-    description: 'Sitio web oficial y plataforma de acompañamiento reflexivo y filosófico. Arquitectura editorial minimalista de altísima gama, diseño tipográfico interactivo, instrumento de auto-exploración basado en algoritmos de escucha, catálogo de planes de suscripción y agendamiento conversacional directo.',
-    highlights: [
-      { label: 'Arquitectura Web', value: 'Next.js + Tailwind' },
-      { label: 'Identidad Visual', value: 'Diseño Editorial Pro' },
-      { label: 'Conversión', value: 'Funnel Integrado 24/7' },
+    badge: '● SYS_DEPLOYED: LIVE',
+    tags: '[DISEÑO_WEB] [BRANDING] [ALGORITMO_DE_ESCUCHA] [NEXT_JS] [CONVERSIÓN]',
+    description: 'Sitio web oficial y plataforma de acompañamiento reflexivo y filosófico. Arquitectura editorial minimalista de alta gama, tipografía interactiva, instrumento de auto-exploración basado en algoritmos de escucha, planes de suscripción y agendamiento conversacional directo.',
+    metrics: [
+      { label: 'ARQUITECTURA WEB', value: 'NEXT.JS + TAILWIND' },
+      { label: 'IDENTIDAD VISUAL', value: 'DISEÑO EDITORIAL PRO' },
+      { label: 'CONVERSIÓN', value: 'FUNNEL INTEGRADO 24/7' },
     ],
-    ctaText: 'Explorar Sitio Web ↗',
+    ctaText: 'EXPLORAR_SITIO_WEB ↗',
   },
 ]
 
-function PortfolioSection() {
+function BlueprintPortfolioSection() {
   return (
-    <section id="portafolio" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-2xl mx-auto">
-        <span className="sec-label">{"// SYS/PORTAFOLIO // CASOS DE ÉXITO"}</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
-          Despliegues en <span className="text-accent-gradient">Producción</span>
-        </h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-          Sistemas vivos, código en producción y plataformas de IA activas desarrolladas con nuestra metodología de Sastrería Algorítmica.
-        </p>
-      </motion.div>
+    <section id="casos" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 pb-4 border-b border-white/10 font-mono">
+        <div>
+          <span className="text-[#0047FF] font-bold text-xs uppercase tracking-widest block mb-1">
+            04 // DESPLIEGUES EN PRODUCCIÓN
+          </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8]">
+            SISTEMAS <span className="text-[#FF3B1E]">VIVOS</span>
+          </h2>
+        </div>
+        <div className="text-xs text-[#6E7681] max-w-md">
+          Código en producción, arquitecturas desplegadas y plataformas de IA activas desarrolladas con nuestra metodología de ingeniería de precisión.
+        </div>
+      </div>
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {portfolioProjects.map((project) => (
-          <motion.div key={project.id} variants={fadeUp} className="h-full">
-            <SpotlightCard className="h-full flex flex-col overflow-hidden border border-white/10 hover:border-white/25 transition-all duration-300">
-              {/* Browser Window Header */}
-              <div className="flex items-center justify-between px-5 py-3.5 bg-black/40 border-b border-white/10 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                </div>
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] font-mono text-[var(--text-muted)] hover:text-white hover:border-white/25 transition-colors max-w-[220px] sm:max-w-xs truncate no-underline"
-                  title={`Abrir ${project.title} (${project.url})`}
-                >
-                  <span className="text-[9px] text-[var(--success)]">🔒</span>
-                  <span className="truncate">{project.displayUrl}</span>
-                  <span className="text-[10px] opacity-70">↗</span>
-                </a>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.3)] text-[var(--success)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-                  {project.badge}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {PORTFOLIO_PROJECTS.map((proj) => (
+          <div
+            key={proj.id}
+            className="card-glass-industrial border-blueprint flex flex-col justify-between overflow-hidden group hover:border-white/30 transition-colors"
+          >
+            <CornerMarks />
+
+            {/* Industrial HUD Bar */}
+            <div className="p-3.5 bg-black/80 border-b border-white/10 flex items-center justify-between font-mono text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-[#FF3B1E]" />
+                <span className="w-2 h-2 bg-[#E7FF00]" />
+                <span className="w-2 h-2 bg-[#0047FF]" />
+                <span className="text-[#EDECE8] font-bold ml-2">{proj.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-[#E7FF00]/10 border border-[#E7FF00]/40 text-[#E7FF00] text-[10px] font-bold">
+                  {proj.badge}
                 </span>
               </div>
+            </div>
 
-              {/* Viewport Preview Frame */}
-              <div className="relative w-full h-56 sm:h-64 md:h-72 overflow-hidden border-b border-white/10 group">
-                <Image
-                  src={project.previewImage}
-                  alt={`Captura del proyecto ${project.title}`}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#07050a] via-[#07050a]/30 to-transparent opacity-85 pointer-events-none" />
+            {/* Screenshot Frame with Blueprint Crosshairs */}
+            <div className="relative w-full h-64 sm:h-72 overflow-hidden border-b border-white/10 bg-black/60">
+              <Image
+                src={proj.previewImage}
+                alt={`Captura del proyecto ${proj.title}`}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-102"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0E1013] via-transparent to-transparent opacity-80" />
 
-                {/* Floating Brand Badge */}
-                <div className="absolute bottom-3 left-4 flex items-center gap-3 z-10 bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15 shadow-xl">
-                  <div className="w-9 h-9 relative rounded-lg overflow-hidden shrink-0 bg-white/10 p-0.5 border border-white/10">
-                    <Image
-                      src={project.brandAsset}
-                      alt={`${project.title} logo`}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <span className="block text-xs font-bold text-white leading-tight">{project.title}</span>
-                    <span className="block text-[10px] text-[var(--text-muted)] font-mono leading-tight">{project.subtitle}</span>
-                  </div>
+              {/* Floating Blueprint Brand Badge */}
+              <div className="absolute bottom-3 left-4 flex items-center gap-3 bg-[#0E1013]/90 border border-white/20 px-3 py-2">
+                <div className="w-8 h-8 relative bg-white/10 p-1 border border-white/15">
+                  <Image
+                    src={proj.brandAsset}
+                    alt={`${proj.title} logo`}
+                    fill
+                    className="object-contain"
+                  />
                 </div>
+                <div className="font-mono">
+                  <span className="block text-xs font-bold text-[#EDECE8]">{proj.title}</span>
+                  <span className="block text-[10px] text-[#6E7681]">{proj.subtitle}</span>
+                </div>
+              </div>
 
-                {/* Hover Quick Visit Badge */}
+              {/* Top Right Quick Open Link */}
+              <a
+                href={proj.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-3 right-3 font-mono text-xs px-2.5 py-1 bg-black/80 border border-white/20 text-[#EDECE8] hover:border-[#E7FF00] hover:text-[#E7FF00] no-underline"
+              >
+                ABRIR ↗
+              </a>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-6 sm:p-7 flex flex-col flex-1 justify-between gap-5">
+              <div>
+                <div className="font-mono text-[11px] text-[#0047FF] font-bold uppercase mb-2">
+                  {proj.category}
+                </div>
+                <p className="text-sm text-[#EDECE8]/80 leading-relaxed mb-4">
+                  {proj.description}
+                </p>
+                <div className="font-mono text-[11px] text-[#6E7681]">
+                  {proj.tags}
+                </div>
+              </div>
+
+              {/* Technical Metrics */}
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 font-mono text-xs">
+                {proj.metrics.map((m) => (
+                  <div key={m.label} className="p-2 bg-black/40 border border-white/10">
+                    <div className="text-[9px] text-[#6E7681] uppercase truncate">{m.label}</div>
+                    <div className="text-xs font-bold text-[#EDECE8] mt-0.5 truncate">{m.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Brutalist Direct Action Button */}
+              <div className="pt-2">
                 <a
-                  href={project.url}
+                  href={proj.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/85 backdrop-blur-md text-xs font-semibold text-white border border-white/20 hover:border-[var(--secondary-glow)] hover:text-[var(--secondary-glow)] no-underline shadow-lg"
+                  className="btn-brutalist-red w-full text-center"
                 >
-                  Abrir ↗
+                  {proj.ctaText}
                 </a>
               </div>
-
-              {/* Card Body */}
-              <div className="p-6 sm:p-7 flex flex-col flex-1 gap-4">
-                <div>
-                  <div className="text-[10px] uppercase font-bold tracking-widest text-[var(--secondary-glow)] mb-2">
-                    {project.category}
-                  </div>
-                  <TagPills tags={project.tags} />
-                </div>
-
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1">
-                  {project.description}
-                </p>
-
-                {/* Technical Highlights */}
-                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10">
-                  {project.highlights.map((h) => (
-                    <div key={h.label} className="p-2.5 rounded-lg bg-white/5 border border-white/5">
-                      <div className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] truncate">{h.label}</div>
-                      <div className="text-xs font-bold text-[var(--text-main)] truncate mt-0.5">{h.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Direct Action Button */}
-                <div className="pt-2">
-                  <MagneticButton
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    primary
-                    className="w-full justify-center !py-3 !text-xs uppercase tracking-wider font-bold"
-                  >
-                    {project.ctaText}
-                  </MagneticButton>
-                </div>
-              </div>
-            </SpotlightCard>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Available Slot / Next Deployment */}
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-        <SpotlightCard className="p-8 border border-dashed border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 bg-[rgba(37,24,46,0.2)]">
-          <div className="space-y-2 text-left">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[var(--secondary-glow)] animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--secondary-glow)] font-mono">
-                {"// SYS/SLOT_DISPONIBLE // DESPLIEGUE PERSONALIZADO"}
-              </span>
             </div>
-            <h3 className="text-2xl font-bold tracking-tight text-[var(--text-main)]">
-              ¿Su empresa será nuestro próximo caso de éxito?
-            </h3>
-            <p className="text-[var(--text-muted)] text-sm max-w-xl leading-relaxed">
-              Diseñamos plataformas y agentes autónomos a la medida de su flujo de negocio. Resultados auditables, soberanía de datos y código en producción sin dependencias externas.
-            </p>
           </div>
-          <MagneticButton
-            href="mailto:ssolucionesdeia@gmail.com"
-            primary
-            className="shrink-0 !px-7 !py-3.5 text-xs font-bold uppercase tracking-wider"
-          >
-            Iniciar su Proyecto →
-          </MagneticButton>
-        </SpotlightCard>
-      </motion.div>
+        ))}
+      </div>
+
+      {/* Available Deployment Slot Card */}
+      <div className="card-glass-industrial p-8 border-2 border-dashed border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 bg-black/40">
+        <CornerMarks />
+        <div className="space-y-2 text-left">
+          <div className="font-mono text-xs text-[#E7FF00] font-bold flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#E7FF00] animate-pulse" />
+            <span>SLOT_DISPONIBLE // ARQUITECTURA_A_LA_MEDIDA</span>
+          </div>
+          <h3 className="font-display font-black text-2xl uppercase tracking-tight text-[#EDECE8]">
+            ¿SU ORGANIZACIÓN SERÁ NUESTRO PRÓXIMO CASO DE ESTUDIO?
+          </h3>
+          <p className="text-sm text-[#EDECE8]/75 max-w-2xl leading-relaxed">
+            Diseñamos plataformas y redes de agentes autónomos a la medida exacta de sus flujos operativos y regulatorios. Resultados auditables, soberanía de datos y código en producción.
+          </p>
+        </div>
+        <a
+          href="mailto:ssolucionesdeia@gmail.com"
+          className="btn-brutalist-canary shrink-0"
+        >
+          INICIAR_PROYECTO →
+        </a>
+      </div>
     </section>
   )
 }
 
 // ============================================================
-// SUBSTACK DIGEST SECTION — LAB DE INVESTIGACIÓN
+// RESEARCH LAB & SUBSTACK SECTION (RUNTIME GOVERNANCE DIGEST)
 // ============================================================
 
-function SubstackDigestSection() {
+function BlueprintDigestSection() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
@@ -1378,306 +1169,406 @@ function SubstackDigestSection() {
   }
 
   return (
-    <section id="digest" className="relative z-10 py-24 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="text-center mb-16 max-w-3xl mx-auto">
-        <span className="sec-label">{"// LAB DE INVESTIGACIÓN // RUNTIME GOVERNANCE DIGEST"}</span>
-        <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-tight tracking-tighter mb-4">
-          Runtime Governance Digest: <span className="text-accent-gradient">Laboratorio &amp; Ensayos</span>
-        </h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-          Nuestras reflexiones semanales, análisis técnicos y tesis epistemológicas sobre el impacto real de la Inteligencia Artificial en la alta dirección, el derecho y la sociedad.
-        </p>
-      </motion.div>
+    <section id="digest" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 pb-4 border-b border-white/10 font-mono">
+        <div>
+          <span className="text-[#E7FF00] font-bold text-xs uppercase tracking-widest block mb-1">
+            05 // LAB DE INVESTIGACIÓN
+          </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8]">
+            RUNTIME GOVERNANCE <span className="text-[#0047FF]">DIGEST</span>
+          </h2>
+        </div>
+        <div className="text-xs text-[#6E7681] max-w-md">
+          Ensayos semanales, análisis técnicos y tesis epistemológicas sobre el impacto real de los algoritmos en la alta dirección.
+        </div>
+      </div>
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerParent} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* Featured Essay Card (8 cols) */}
-        <motion.div variants={fadeUp} className="lg:col-span-8">
-          <SpotlightCard className="p-8 md:p-10 h-full flex flex-col justify-between border border-white/10 hover:border-[var(--accent-lime)]/40 transition-all duration-300 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(circle,rgba(212,255,0,0.08)_0%,transparent_70%)] pointer-events-none" />
-
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[rgba(212,255,0,0.12)] border border-[rgba(212,255,0,0.3)] text-[var(--accent-lime)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-lime)] animate-pulse" />
-                  Ensayo Destacado · Laboratorio de Pensamiento
-                </span>
-                <span className="text-xs font-mono text-[var(--text-muted)]">Edición Especial · 8 min lectura</span>
-              </div>
-
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white mb-4 leading-tight group-hover:text-[var(--accent-lime)] transition-colors">
-                «La trampa del Compliance en papel: Por qué una certificación ISO 42001 no evita que tu IA colapse»
-              </h3>
-
-              <div className="mb-6">
-                <TagPills tags="[ISO 42001] [RUNTIME SECURITY] [EPISTEMOLOGÍA] [SOBERANÍA LOCAL] [ALTA DIRECCIÓN]" />
-              </div>
-
-              <p className="text-[var(--text-muted)] text-base sm:text-lg leading-relaxed mb-6">
-                Tener carpetas repletas de políticas redactadas por abogados y sellos de certificación no detiene una inyección de prompt ni una alucinación crítica en medio de una decisión estratégica. Desglosamos por qué la verdadera gobernanza de IA no reside en documentos PDF, sino en cortafuegos deterministas de runtime, control en código y soberanía estricta del cómputo local.
-              </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Featured Essay (8 cols) */}
+        <div className="lg:col-span-8 card-glass-industrial p-8 sm:p-10 flex flex-col justify-between border-blueprint group">
+          <CornerMarks />
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-white/10 font-mono text-xs">
+              <span className="px-2.5 py-0.5 bg-[#E7FF00]/10 border border-[#E7FF00]/40 text-[#E7FF00] font-bold">
+                ENSAYO DESTACADO // EDICIÓN RECIENTE
+              </span>
+              <span className="text-[#6E7681]">LECTURA: 8 MIN // RESEARCH LAB</span>
             </div>
 
-            <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[var(--void-2)] border border-white/10 flex items-center justify-center font-bold text-sm text-[var(--accent-lime)]">
-                  ⚡
-                </div>
-                <div>
-                  <span className="block text-xs font-bold text-white leading-tight">Soluciones de IA Research</span>
-                  <span className="block text-[10px] font-mono text-[var(--text-dim)]">runtimegovernance.substack.com</span>
-                </div>
-              </div>
+            <h3 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-[#EDECE8] mb-4 leading-tight group-hover:text-[#E7FF00] transition-colors">
+              «LA TRAMPA DEL COMPLIANCE EN PAPEL: POR QUÉ UNA CERTIFICACIÓN ISO 42001 NO EVITA QUE TU IA COLAPSE»
+            </h3>
 
-              <a
-                href="https://runtimegovernance.substack.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-phosphor text-xs no-underline inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold"
+            <div className="font-mono text-xs text-[#0047FF] mb-6">
+              [ISO_42001] [RUNTIME_SECURITY] [EPISTEMOLOGÍA] [SOBERANÍA_LOCAL] [ALTA_DIRECCIÓN]
+            </div>
+
+            <p className="text-base text-[#EDECE8]/80 leading-relaxed mb-6 font-normal">
+              Tener archivadores repletos de políticas redactadas por despachos legales y sellos de certificación no detiene una inyección de prompt ni una alucinación crítica en un proceso decisional. Desglosamos por qué la verdadera gobernanza de IA no vive en documentos PDF, sino en cortafuegos deterministas de runtime, control en código y soberanía física de la GPU.
+            </p>
+          </div>
+
+          <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="font-mono text-xs">
+              <span className="text-[#6E7681] block">PUBLICACIÓN:</span>
+              <span className="text-[#EDECE8] font-bold">runtimegovernance.substack.com</span>
+            </div>
+            <a
+              href="https://runtimegovernance.substack.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-brutalist-canary"
+            >
+              LEER_EN_SUBSTACK ↗
+            </a>
+          </div>
+        </div>
+
+        {/* Direct Subscribe Module (4 cols) */}
+        <div className="lg:col-span-4 card-glass-industrial p-8 flex flex-col justify-between border-blueprint bg-black/60">
+          <CornerMarks />
+          <div>
+            <div className="pb-3 mb-6 border-b border-white/10 font-mono text-xs text-[#6E7681]">
+              SUSCRIPCIÓN_DIRECTA // BOLETÍN EJECUTIVO
+            </div>
+            <div className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+              <PixelTerminalIcon className="w-5 h-5 text-[#E7FF00]" />
+            </div>
+            <h4 className="font-display font-black text-xl uppercase tracking-tight text-[#EDECE8] mb-2">
+              RECIBIR EL DIGEST SEMANAL
+            </h4>
+            <p className="text-xs text-[#EDECE8]/70 leading-relaxed mb-6">
+              Análisis quincenales de arquitectura algorítmica, marcos normativos y desgloses de infraestructura directamente en su bandeja de entrada. Cero spam de marketing.
+            </p>
+
+            <form onSubmit={handleSubscribe} className="space-y-3">
+              <div>
+                <label htmlFor="digest-email" className="sr-only">Correo corporativo</label>
+                <input
+                  id="digest-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="su.correo@empresa.com"
+                  className="w-full px-3 py-2.5 bg-black border border-white/20 text-[#EDECE8] placeholder-white/30 font-mono text-xs focus:outline-none focus:border-[#E7FF00] rounded-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn-brutalist-canary w-full !py-2.5 text-xs text-center"
               >
-                Leer Ensayo en Substack ↗
-              </a>
-            </div>
-          </SpotlightCard>
-        </motion.div>
+                {submitted ? 'REDIRECCIONANDO A SUBSTACK...' : 'SUSCRIBIRME_AL_LAB ↗'}
+              </button>
+            </form>
+          </div>
 
-        {/* Direct Subscribe Card (4 cols) */}
-        <motion.div variants={fadeUp} className="lg:col-span-4">
-          <SpotlightCard className="p-8 h-full flex flex-col justify-between border border-white/10 bg-black/40">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-[rgba(212,255,0,0.08)] border border-[rgba(212,255,0,0.25)] flex items-center justify-center text-xl text-[var(--accent-lime)] mb-6">
-                ✉
-              </div>
-              <h4 className="text-xl font-bold tracking-tight text-white mb-2">
-                Suscríbase al Digest Ejecutivo
-              </h4>
-              <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6">
-                Reciba quincenalmente nuestros análisis de vanguardia, marcos de gobernanza y desgloses de arquitectura de IA directamente en su correo.
-              </p>
-
-              <form onSubmit={handleSubscribe} className="space-y-3">
-                <div>
-                  <label htmlFor="digest-email" className="sr-only">Correo electrónico corporativo</label>
-                  <input
-                    id="digest-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="su.correo@empresa.com"
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[var(--accent-lime)] transition-colors font-mono"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full btn-phosphor !py-3 text-xs uppercase tracking-wider font-bold cursor-pointer"
-                >
-                  {submitted ? 'Redirigiendo a Substack...' : 'Suscribirme al Lab ↗'}
-                </button>
-              </form>
-            </div>
-
-            <div className="pt-6 mt-6 border-t border-white/5 text-[11px] font-mono text-[var(--text-dim)]">
-              🔒 Acceso abierto para directores, reguladores y tecnólogos. Cero spam.
-            </div>
-          </SpotlightCard>
-        </motion.div>
-      </motion.div>
+          <div className="pt-6 mt-6 border-t border-white/10 font-mono text-[11px] text-[#6E7681]">
+            🔒 ACCESO LIBRE PARA DIRECTORES Y REGULADORES
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
 
 // ============================================================
-// PODCAST BANNER SECTION — SINTAXIS & SENTIDO
+// TECHNICAL PODCAST BANNER (SINTAXIS & SENTIDO)
 // ============================================================
 
-function PodcastBannerSection() {
+function TechnicalPodcastSection() {
   return (
-    <section id="podcast" className="relative z-10 py-20 px-6 md:px-10 max-w-7xl mx-auto">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp}>
-        <SpotlightCard className="p-8 md:p-12 border border-white/15 bg-[rgba(14,16,23,0.75)] relative overflow-hidden">
-          {/* Subtle audio waves background pattern */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-[radial-gradient(circle,rgba(0,71,255,0.12)_0%,transparent_70%)] pointer-events-none" />
+    <section id="podcast" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+      <div className="card-glass-industrial p-8 sm:p-12 border-blueprint bg-[#14171D]/90 relative overflow-hidden">
+        <CornerMarks />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-            {/* Podcast Info (8 cols) */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[rgba(0,71,255,0.15)] border border-[rgba(0,71,255,0.4)] text-[var(--accent-cyan)]">
-                  <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-pulse" />
-                  Podcast Semanal Ejecutivo
-                </span>
-                <span className="text-xs font-mono text-[var(--text-muted)]">Episodios de 10 minutos</span>
-              </div>
-
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight">
-                Sintaxis &amp; Sentido: <span className="text-accent-gradient">El Podcast Semanal de Soluciones de IA</span>
-              </h3>
-
-              <p className="text-base text-[var(--text-muted)] leading-relaxed max-w-2xl">
-                Episodios ejecutivos de 10 minutos analizando el cruce entre hermenéutica, mercado de trabajo y gobernanza de algoritmos. Sin rodeos técnicos innecesarios ni marketing superficial: análisis crítico y aplicable para directores y estrategas.
-              </p>
-
-              {/* Episode topics pills */}
-              <div className="flex flex-wrap gap-2 pt-2">
-                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
-                  Ep. 01: La muerte del prompt y el renacer del criterio
-                </span>
-                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
-                  Ep. 02: ¿Quién responde cuando el agente delinque?
-                </span>
-                <span className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[var(--text-main)] font-mono">
-                  Ep. 03: Soberanía de GPU vs. Nube Rentada
-                </span>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Podcast Info (8 cols) */}
+          <div className="lg:col-span-8 space-y-4">
+            <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+              <span className="px-2.5 py-0.5 bg-[#0047FF]/20 border border-[#0047FF] text-[#0047FF] font-bold">
+                EMISIÓN SEMANAL // AUDIO LAB
+              </span>
+              <span className="text-[#6E7681]">FORMATO: EPISODIOS DE 10 MINUTOS</span>
             </div>
 
-            {/* CTA & Spotify Badge (4 cols) */}
-            <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center gap-4">
-              <div className="flex items-center gap-1.5 mb-2">
-                {/* Visualizer audio bars animation */}
-                {[40, 75, 55, 90, 60, 80, 45, 95, 70, 50].map((h, i) => (
-                  <motion.span
-                    key={i}
-                    animate={{ height: ['8px', `${h * 0.4}px`, '8px'] }}
-                    transition={{ duration: 1.2 + (i % 3) * 0.2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="w-1 bg-[var(--accent-cyan)] rounded-full inline-block"
-                  />
-                ))}
-              </div>
+            <h3 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#EDECE8] leading-none">
+              SINTAXIS &amp; SENTIDO: <span className="text-[#FF3B1E]">EL PODCAST SEMANAL</span>
+            </h3>
 
-              <a
-                href="https://open.spotify.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(29,185,84,0.3)] hover:shadow-[0_0_30px_rgba(29,185,84,0.5)] no-underline"
-              >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.498 17.306c-.218.358-.684.47-1.042.253-2.855-1.745-6.448-2.14-10.68-1.173-.41.094-.82-.16-.913-.57-.094-.41.16-.82.57-.913 4.63-1.056 8.604-.61 11.812 1.36.358.217.47.684.253 1.043zm1.464-3.26c-.274.444-.86.587-1.303.313-3.27-2.01-8.254-2.593-12.122-1.417-.5.152-1.03-.134-1.182-.635-.152-.5.134-1.03.635-1.182 4.417-1.34 9.91-.69 13.66 1.618.443.274.586.86.312 1.303zm.126-3.41c-3.92-2.327-10.38-2.542-14.126-1.405-.6.183-1.237-.16-1.42-.76-.182-.6.16-1.237.76-1.42 4.305-1.306 11.43-1.054 15.94 1.624.54.32.716 1.02.395 1.56-.32.54-1.02.716-1.56.395z"/>
-                </svg>
-                <span>Spotify for Creators ↗</span>
-              </a>
+            <p className="text-sm sm:text-base text-[#EDECE8]/80 leading-relaxed max-w-2xl">
+              Episodios ejecutivos de 10 minutos analizando el cruce entre hermenéutica, mercado de trabajo y gobernanza de algoritmos. Sin rodeos técnicos innecesarios ni marketing superficial: análisis crítico para directores y estrategas.
+            </p>
 
-              <span className="text-[10px] font-mono text-[var(--text-dim)]">
-                Disponible en todas las plataformas de podcast
+            {/* Episode Pill Tags */}
+            <div className="flex flex-wrap gap-2 pt-2 font-mono text-xs">
+              <span className="px-3 py-1 bg-black/60 border border-white/10 text-[#EDECE8]">
+                EP 01: LA MUERTE DEL PROMPT Y EL RENACER DEL CRITERIO
+              </span>
+              <span className="px-3 py-1 bg-black/60 border border-white/10 text-[#EDECE8]">
+                EP 02: ¿QUIÉN RESPONDE CUANDO EL AGENTE DELINQUE?
+              </span>
+              <span className="px-3 py-1 bg-black/60 border border-white/10 text-[#EDECE8]">
+                EP 03: SOBERANÍA DE GPU VS. NUBE RENTADA
               </span>
             </div>
           </div>
-        </SpotlightCard>
-      </motion.div>
-    </section>
-  )
-}
 
-// ============================================================
-// CONTACT + FOOTER
-// ============================================================
+          {/* Pixel Art Visualizer & Spotify Action (4 cols) */}
+          <div className="lg:col-span-4 flex flex-col items-start lg:items-end justify-center gap-4">
+            {/* Pixelated Equalizer Bars */}
+            <div className="flex items-end gap-1.5 h-10 p-2 bg-black/60 border border-white/10">
+              {[4, 10, 6, 12, 8, 14, 5, 11, 7, 13, 9, 6].map((bar, i) => (
+                <div
+                  key={i}
+                  className="w-1.5 bg-[#E7FF00]"
+                  style={{
+                    height: `${(bar / 14) * 100}%`,
+                    animation: `pulse ${(i % 3) * 0.4 + 0.8}s ease-in-out infinite alternate`,
+                  }}
+                />
+              ))}
+            </div>
 
-function ContactSection() {
-  return (
-    <section id="contacto" className="relative z-10 py-24 px-6 md:px-10 max-w-5xl mx-auto text-center">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp}>
-        <span className="sec-label">¿Listo para comenzar?</span>
-        <h2 className="text-[clamp(3rem,8vw,7rem)] font-bold leading-none tracking-tighter mb-4">Construyamos la IA<br /><span className="text-accent-gradient">de su empresa</span></h2>
-        <p className="text-[var(--text-muted)] text-lg leading-relaxed max-w-2xl mx-auto mb-10">Diagnóstico gratuito de su ecosistema de IA. Identifiquemos juntos qué necesita y cómo implementarlo con soberanía total.</p>
-        <div className="flex flex-wrap gap-4 justify-center mb-14">
-          <MagneticButton href="mailto:ssolucionesdeia@gmail.com" primary className="!px-8 !py-4 !text-base">Iniciar Diagnóstico Gratuito →</MagneticButton>
-          <MagneticButton href="https://wa.me/573108688648" target="_blank" rel="noopener noreferrer" className="!px-8 !py-4 !text-base">WhatsApp Directo</MagneticButton>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[
-            { icon: '✉', label: 'Email', val: 'ssolucionesdeia@gmail.com', href: 'mailto:ssolucionesdeia@gmail.com' },
-            { icon: '📱', label: 'WhatsApp', val: '+57 310 868 8648', href: 'https://wa.me/573108688648' },
-            { icon: '🔗', label: 'LinkedIn', val: '@corvattaconsultor', href: 'https://www.linkedin.com/in/corvattaconsultor' },
-          ].map((c) => (
-            <a key={c.label} href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="no-underline">
-              <SpotlightCard className="p-5 text-left h-full">
-                <div className="text-2xl mb-2">{c.icon}</div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-lime)] mb-1">{c.label}</div>
-                <div className="text-[var(--text-muted)] text-sm">{c.val}</div>
-              </SpotlightCard>
+            {/* Spotify for Creators Button */}
+            <a
+              href="https://open.spotify.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-brutalist-red !bg-[#1DB954] !text-black hover:!text-black flex items-center gap-2"
+            >
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.498 17.306c-.218.358-.684.47-1.042.253-2.855-1.745-6.448-2.14-10.68-1.173-.41.094-.82-.16-.913-.57-.094-.41.16-.82.57-.913 4.63-1.056 8.604-.61 11.812 1.36.358.217.47.684.253 1.043zm1.464-3.26c-.274.444-.86.587-1.303.313-3.27-2.01-8.254-2.593-12.122-1.417-.5.152-1.03-.134-1.182-.635-.152-.5.134-1.03.635-1.182 4.417-1.34 9.91-.69 13.66 1.618.443.274.586.86.312 1.303zm.126-3.41c-3.92-2.327-10.38-2.542-14.126-1.405-.6.183-1.237-.16-1.42-.76-.182-.6.16-1.237.76-1.42 4.305-1.306 11.43-1.054 15.94 1.624.54.32.716 1.02.395 1.56-.32.54-1.02.716-1.56.395z"/>
+              </svg>
+              <span>SPOTIFY_FOR_CREATORS ↗</span>
             </a>
-          ))}
+
+            <span className="font-mono text-[10px] text-[#6E7681]">
+              DISTRIBUCIÓN EN TODAS LAS PLATAFORMAS DE AUDIO
+            </span>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }
 
-function Footer() {
+// ============================================================
+// FOOTER AS INDUSTRIAL SPECIFICATION MACHINE PLATE
+// ============================================================
+
+function IndustrialSpecificationFooter() {
   return (
-    <footer className="relative z-10 border-t border-white/10 py-10 px-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto text-sm text-gray-500">
-      <p>© 2026 Soluciones de IA. Applied Think Tank &amp; Executive Advisory.</p>
-      <div className="flex flex-wrap items-center gap-6">
-        {[
-          { href: 'https://runtimegovernance.substack.com', l: 'Substack Digest' },
-          { href: 'https://www.tiktok.com/@soluciones.de.ia', l: 'TikTok' },
-          { href: 'https://instagram.com/SOLUCIONES_DEIA', l: 'Instagram' },
-          { href: 'https://www.linkedin.com/in/corvattaconsultor', l: 'LinkedIn' },
-        ].map((s) => (
-          <a
-            key={s.l}
-            href={s.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--text-main)] no-underline transition-colors flex items-center gap-1"
-          >
-            {s.l} ↗
-          </a>
-        ))}
+    <footer id="contacto" className="border-t-2 border-white/20 bg-[#0E1013] text-[#6E7681] font-mono text-xs">
+      {/* Top Specification Banner */}
+      <div className="hazard-stripes h-2 w-full" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Main Machine Specification Plate */}
+        <div className="border border-white/20 p-8 bg-[#14171D] relative mb-12">
+          <CornerMarks />
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10">
+            {/* Col 1: System Ident */}
+            <div className="space-y-3 md:pr-6">
+              <div className="text-[#EDECE8] font-bold uppercase tracking-wider text-sm flex items-center gap-2">
+                <PixelCoreIcon className="w-4 h-4 text-[#E7FF00]" />
+                SOLUCIONES DE IA
+              </div>
+              <p className="text-xs text-[#6E7681] leading-relaxed">
+                Consultoría de alta dirección y laboratorio de arquitectura en Inteligencia Artificial. Gobernanza activa, epistemología computacional y cómputo soberano en premisa.
+              </p>
+              <div className="pt-2 text-[11px] text-[#0047FF]">
+                [SPEC_RATING: CLASE_A // APPLIED THINK TANK]
+              </div>
+            </div>
+
+            {/* Col 2: Machine Metrics */}
+            <div className="space-y-2 pt-6 md:pt-0 md:px-6">
+              <div className="text-[#EDECE8] font-bold uppercase text-xs">ESPECIFICACIONES DEL RACK</div>
+              <div className="text-[11px] space-y-1">
+                <div className="flex justify-between">
+                  <span>GPU_UNIT:</span>
+                  <span className="text-[#EDECE8]">RTX 5090 32GB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>HOST_CPU:</span>
+                  <span className="text-[#EDECE8]">Ryzen 9 9950X</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>RAM_ARRAY:</span>
+                  <span className="text-[#EDECE8]">192 GB DDR5</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>NVME_STORAGE:</span>
+                  <span className="text-[#EDECE8]">7 TB Gen 5</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TELEMETRÍA:</span>
+                  <span className="text-[#E7FF00]">0% CLOUD LEAK</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Col 3: Direct Telecommunication */}
+            <div className="space-y-2 pt-6 md:pt-0 md:px-6">
+              <div className="text-[#EDECE8] font-bold uppercase text-xs">LÍNEAS DE ENLACE DIRECTO</div>
+              <div className="text-[11px] space-y-1.5">
+                <div>
+                  <span className="text-[#6E7681] block">CORREO DIRECTIVO:</span>
+                  <a href="mailto:ssolucionesdeia@gmail.com" className="text-[#EDECE8] hover:text-[#E7FF00] no-underline">
+                    ssolucionesdeia@gmail.com
+                  </a>
+                </div>
+                <div>
+                  <span className="text-[#6E7681] block">CANAL WHATSAPP:</span>
+                  <a href="https://wa.me/573108688648" target="_blank" rel="noopener noreferrer" className="text-[#EDECE8] hover:text-[#E7FF00] no-underline">
+                    +57 310 868 8648 ↗
+                  </a>
+                </div>
+                <div>
+                  <span className="text-[#6E7681] block">CONSULTOR PRINCIPAL:</span>
+                  <a href="https://www.linkedin.com/in/corvattaconsultor" target="_blank" rel="noopener noreferrer" className="text-[#EDECE8] hover:text-[#E7FF00] no-underline">
+                    @corvattaconsultor ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Col 4: Network Repositories */}
+            <div className="space-y-2 pt-6 md:pt-0 md:pl-6">
+              <div className="text-[#EDECE8] font-bold uppercase text-xs">REDES &amp; PUBLICACIONES</div>
+              <div className="flex flex-col gap-2 text-[11px]">
+                <a
+                  href="https://runtimegovernance.substack.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#E7FF00] hover:underline no-underline"
+                >
+                  &gt; SUBSTACK // RESEARCH LAB ↗
+                </a>
+                <a
+                  href="https://github.com/agencypazia-prog/SOLUCIONES-DE-IA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#EDECE8] hover:underline no-underline"
+                >
+                  &gt; GITHUB // REPOSITORIO ↗
+                </a>
+                <a
+                  href="https://www.tiktok.com/@soluciones.de.ia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#6E7681] hover:text-[#EDECE8] no-underline"
+                >
+                  &gt; TIKTOK // CRITERIO RÁPIDO ↗
+                </a>
+                <a
+                  href="https://instagram.com/SOLUCIONES_DEIA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#6E7681] hover:text-[#EDECE8] no-underline"
+                >
+                  &gt; INSTAGRAM // COMUNICADOS ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar: License, Hashes & Metadata */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] pt-4 border-t border-white/10">
+          <div className="flex items-center gap-3">
+            <span>© 2026 SOLUCIONES DE IA. TODOS LOS DERECHOS RESERVADOS.</span>
+            <span className="text-[#6E7681]">|</span>
+            <span className="text-[#E7FF00]">SOBERANÍA LOCAL-FIRST</span>
+          </div>
+          <div className="flex items-center gap-4 text-[#6E7681]">
+            <span>BUILD_ID: 0x72E9CF6_V4.2</span>
+            <span>STACK: NEXTJS_16 // TURBOPACK</span>
+          </div>
+        </div>
       </div>
     </footer>
   )
 }
 
 // ============================================================
-// MAIN
+// MAIN PAGE COMPONENT
 // ============================================================
 
 export default function Home() {
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) })
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+    })
     let frame: number
-    const raf = (time: number) => { lenis.raf(time); frame = requestAnimationFrame(raf) }
+    const raf = (time: number) => {
+      lenis.raf(time)
+      frame = requestAnimationFrame(raf)
+    }
     frame = requestAnimationFrame(raf)
-    return () => { lenis.destroy(); cancelAnimationFrame(frame) }
+    return () => {
+      lenis.destroy()
+      cancelAnimationFrame(frame)
+    }
   }, [])
 
   return (
-    <main className="relative">
-      <CustomCursor />
-      <div className="ambient-background">
-        <TopographicContourLayer />
-        <HalftoneTextureLayer />
-        <NeuralMeshBackground />
-        <CodeStreamLayer />
-        <div className="ambient-blob blob-1" />
-        <div className="ambient-blob blob-2" />
-        <div className="ambient-blob blob-3" />
-      </div>
-      <MeshGlow />
+    <main className="relative bg-[#0E1013] text-[#EDECE8] min-h-screen">
+      {/* Inline SVG Noise Filter for Risography Grain Texture */}
+      <svg className="hidden">
+        <filter id="risoGrainFilter">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.8"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
+        </filter>
+      </svg>
+      <div
+        className="riso-noise-overlay"
+        style={{ filter: 'url(#risoGrainFilter)' }}
+      />
 
-      <NavBar />
+      {/* Brutalist Magnetic Cursor */}
+      <BrutalistCursor />
 
-      <HeroSection />
-      <NeonTubeRail glow="mixed" />
-      <FourPillarsSection />
-      <NeonTubeRail glow="mixed" />
-      <BrandEntitySection />
-      <ProblemSection />
-      <NeonTubeRail glow="amber" />
-      <MethodologySection />
-      <InfrastructureSection />
-      <NeonTubeRail glow="crimson" />
-      <ArchitecturePlansSection />
-      <ServicesConsole />
-      <NeonTubeRail glow="mixed" />
-      <PortfolioSection />
-      <NeonTubeRail glow="mixed" />
-      <SubstackDigestSection />
-      <PodcastBannerSection />
-      <NeonTubeRail glow="amber" />
-      <ContactSection />
-      <Footer />
+      {/* Technical HUD Navigation */}
+      <TechnicalHUD />
+
+      {/* Suprematist Asymmetric Hero */}
+      <SuprematistHero />
+
+      {/* Continuous Kinetic Ticker */}
+      <KineticTicker />
+
+      {/* Blueprint Solutions Grid */}
+      <BlueprintSolutionsGrid />
+
+      {/* Urban Raw Manifesto & Metrics */}
+      <UrbanManifestoSection />
+
+      {/* Tetrahedral Architecture (4 Pillars) */}
+      <TetrahedralArchitectureSection />
+
+      {/* Hardware & Local Compute Specs */}
+      <HardwareSpecSection />
+
+      {/* Blueprint Portfolio (Production Deployments) */}
+      <BlueprintPortfolioSection />
+
+      {/* Research Lab (Substack Digest) */}
+      <BlueprintDigestSection />
+
+      {/* Technical Podcast Section */}
+      <TechnicalPodcastSection />
+
+      {/* Industrial Specification Footer */}
+      <IndustrialSpecificationFooter />
     </main>
   )
 }

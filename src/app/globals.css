@@ -1,29 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Fondos de profundidad táctica */
-  --void: #08090C;
-  --void-2: #0E1017;
-  --surface: rgba(14, 16, 23, 0.65);
-  --surface-border: rgba(255, 255, 255, 0.08);
+  /* ── 1. Paleta de Color: Tinta Risográfica sobre Asfalto Técnico ── */
+  --bg-asphalt: #0E1013;           /* Asfalto pizarra Austurbane */
+  --surface-glass: rgba(20, 23, 29, 0.75); /* Vidrio Industrial ahumado */
+  --surface-border: rgba(255, 255, 255, 0.12);
+  --surface-border-strong: rgba(255, 255, 255, 0.24);
 
-  /* Acentos de vanguardia */
-  --primary-glow: #0047FF;       /* Cobalto Eléctrico (Cómputo & Autoridad) */
-  --accent-lime: #D4FF00;        /* Neo-Phosphor / Acid Lime (Ruptura & Frescura) */
-  --accent-cyan: #00F0FF;        /* Cian Hiper-Láser (Telemetría & Runtime) */
-  --accent-crimson: #FF2A55;     /* Infrarrojo (Alertas Críticas & Riesgo) */
+  /* Tintas Blueprint y Risografía */
+  --ink-blueprint: #0047FF;       /* Cianotipo / Azul Klein puro */
+  --ink-riso-red: #FF3B1E;        /* Bermellón Fluo / Riso Red */
+  --ink-canary: #E7FF00;          /* Canary Acid / Terminal Activa */
+
+  /* Textos mecánicos y de plano */
+  --text-paper: #EDECE8;          /* Blanco hueso mate, tacto de papel */
+  --text-metric: #6E7681;         /* Gris técnico de cota de plano */
+  --text-dim: #3B424D;            /* Gris profundo de retícula */
 
   /* Mapeos de compatibilidad */
-  --secondary-glow: #D4FF00;
-  --tertiary-glow: #00F0FF;
-
-  /* Tipografía y estados */
-  --text-main: #F5F6FA;          /* Titanio Blanco puro */
-  --text-muted: #8A8F9E;         /* Plata Táctica */
-  --text-dim: #4B5162;
-  --success: #00FF88;
-  --mx: 50%;
-  --my: 50%;
+  --void: #0E1013;
+  --void-2: #14171D;
+  --primary-glow: #0047FF;
+  --accent-lime: #E7FF00;
+  --accent-cyan: #0047FF;
+  --accent-crimson: #FF3B1E;
+  --secondary-glow: #E7FF00;
+  --text-main: #EDECE8;
+  --text-muted: #6E7681;
 }
 
 * {
@@ -31,24 +34,35 @@
 }
 
 body {
-  background-color: var(--void);
-  color: var(--text-main);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  background-color: var(--bg-asphalt);
+  color: var(--text-paper);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
   overflow-x: hidden;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-/* ── Display typography: headings & numbers use Space Grotesk ── */
-h1, h2, h3 {
-  font-family: var(--font-space-grotesk), sans-serif;
+/* ── Display Typography: Suprematista / Brutalista ── */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 
-/* ── Lenis smooth scroll ── */
+/* ── Monospace Typography: Blueprint / Consola ── */
+code, pre, .font-mono, .mono-data {
+  font-family: var(--font-jetbrains), monospace;
+}
+
+/* ── Lenis Smooth Scroll ── */
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-/* ── Custom magnetic cursor (difference blend) ── */
+/* ── Brutalist Square Cursor ── */
 @media (pointer: fine) {
   body, a, button { cursor: none; }
 }
@@ -56,9 +70,8 @@ html.lenis, html.lenis body { height: auto; }
 .cursor-dot {
   position: fixed;
   top: 0; left: 0;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--text-main);
+  width: 6px; height: 6px;
+  background: var(--ink-canary);
   mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9999;
@@ -69,226 +82,267 @@ html.lenis, html.lenis body { height: auto; }
 .cursor-ring {
   position: fixed;
   top: 0; left: 0;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid var(--text-main);
+  width: 28px; height: 28px;
+  border: 1px solid var(--text-paper);
+  border-radius: 0px; /* Angulares, cero bordes redondeados */
   mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9998;
   transform: translate(-50%, -50%);
-  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s ease;
+  transition: width 0.15s ease, height 0.15s ease, border-color 0.15s ease;
   will-change: transform;
 }
 
 .cursor-ring.cursor-ring-hover {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.06);
+  width: 48px;
+  height: 48px;
+  border-color: var(--ink-riso-red);
+  background: rgba(255, 59, 30, 0.08);
 }
 
 ::selection {
-  background: var(--primary-glow);
-  color: white;
+  background: var(--ink-riso-red);
+  color: var(--text-paper);
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--primary-glow); }
+/* ── Scrollbar Mecánico ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-asphalt); border-left: 1px solid rgba(255, 255, 255, 0.06); }
+::-webkit-scrollbar-thumb { background: var(--ink-blueprint); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-riso-red); }
 
 /* ================================================
-   AMBIENT MESH GRADIENT BACKGROUND
+   SUSTRATOS Y PATRONES TÉCNICOS BLUEPRINT
    ================================================ */
 
-.ambient-background {
+.blueprint-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.blueprint-grid-dense {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.blueprint-grid-blue {
+  background-image: 
+    linear-gradient(to right, rgba(0, 71, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 71, 255, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Grano Risográfico (Noise Overlay) */
+.riso-noise-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: -1;
-  background: var(--void);
-  overflow: hidden;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 990;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
 }
 
-.ambient-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.4;
-  mix-blend-mode: screen;
-  animation: float 20s ease-in-out infinite alternate;
-  will-change: transform;
+/* Patrón de Advertencia Técnica (Hazard Stripes) */
+.hazard-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ink-riso-red),
+    var(--ink-riso-red) 10px,
+    var(--bg-asphalt) 10px,
+    var(--bg-asphalt) 20px
+  );
 }
 
-.blob-1 { background: var(--primary-glow); width: 50vw; height: 50vw; top: -10%; left: -10%; opacity: 0.25; }
-.blob-2 { background: var(--accent-cyan); width: 40vw; height: 40vw; bottom: -20%; right: -10%; animation-delay: -5s; opacity: 0.2; }
-.blob-3 { background: var(--accent-lime); width: 32vw; height: 32vw; top: 35%; left: 35%; opacity: 0.1; animation-delay: -11s; }
+.hazard-stripes-canary {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ink-canary),
+    var(--ink-canary) 8px,
+    var(--bg-asphalt) 8px,
+    var(--bg-asphalt) 16px
+  );
+}
 
-@keyframes float {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(10vw, 15vh) scale(1.2); }
+.hazard-stripes-subtle {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.08) 6px,
+    transparent 6px,
+    transparent 14px
+  );
 }
 
 /* ================================================
-   NEURAL DATA-MESH TEXTURE (dark-on-dark, behind cards)
+   BOTONES BRUTALISTAS (DURAS, SIN BORDES REDONDOS)
    ================================================ */
 
-.mesh-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.55;
-}
-
-.mesh-lines line {
-  stroke: rgba(255, 255, 255, 0.05);
-  stroke-width: 0.6;
-}
-
-.mesh-nodes circle {
-  fill: rgba(255, 190, 0, 0.16);
-}
-
-.mesh-nodes circle.mesh-node-accent {
-  fill: rgba(202, 31, 61, 0.28);
-}
-
-.code-rain {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  opacity: 0.4;
-}
-
-.code-col {
-  position: absolute;
-  top: -10%;
-  white-space: pre-line;
+.btn-brutalist-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ink-riso-red);
+  color: var(--text-paper);
+  border: 1px solid #000000;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px var(--text-paper);
   font-family: var(--font-jetbrains), monospace;
-  font-size: 10px;
-  line-height: 1.6;
-  letter-spacing: 1px;
-  color: var(--text-dim);
-  animation: codeDrift 16s ease-in-out infinite alternate;
-  will-change: transform;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.875rem 1.75rem;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  text-decoration: none;
 }
 
-@keyframes codeDrift {
-  0% { transform: translateY(-3%); }
-  100% { transform: translateY(3%); }
+.btn-brutalist-red:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text-paper);
+  color: var(--text-paper);
 }
 
-.mesh-glow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(circle 480px at var(--page-mx, 50%) var(--page-my, 50%), rgba(255, 255, 255, 0.07), transparent 70%);
-  mix-blend-mode: screen;
+.btn-brutalist-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--ink-blueprint);
+  border: 1px solid var(--ink-blueprint);
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px rgba(0, 71, 255, 0.5);
+  font-family: var(--font-jetbrains), monospace;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.875rem 1.75rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
 }
 
-/* Cursor-following ambient spotlight (page-level) */
-.cursor-spotlight {
-  position: fixed;
-  top: 0; left: 0;
-  width: 600px; height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(202, 31, 61, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-  transform: translate(-50%, -50%);
-  will-change: transform;
+.btn-brutalist-blue:hover {
+  background-color: var(--ink-blueprint);
+  color: var(--text-paper);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 71, 255, 0.5);
+}
+
+.btn-brutalist-canary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ink-canary);
+  color: #0E1013;
+  border: 1px solid #000000;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px var(--text-paper);
+  font-family: var(--font-jetbrains), monospace;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.875rem 1.75rem;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-brutalist-canary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text-paper);
 }
 
 /* ================================================
-   PREMIUM / BENTO CARDS
+   GLASS INDUSTRIAL & TARJETAS BLUEPRINT
    ================================================ */
 
-.premium-card {
-  background: var(--surface);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+.card-glass-industrial {
+  background-color: var(--surface-glass);
   border: 1px solid var(--surface-border);
-  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   position: relative;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 0px;
 }
 
-.premium-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(202, 31, 61, 0.15);
+.card-glass-industrial:hover {
+  border-color: var(--surface-border-strong);
 }
 
-/* Luz interactiva de los bordes (Reveal Effect) */
-.premium-card::before {
-  content: "";
+/* Marcas de corte o cruces métricas (+) */
+.corner-cross-tl {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 40%, transparent 60%, rgba(255, 255, 255, 0.05));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  top: -6px;
+  left: -6px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-metric);
+  user-select: none;
   pointer-events: none;
+  font-weight: 400;
 }
 
-/* Spotlight that tracks the cursor inside a card (set --mx/--my via JS) */
-.premium-card-spot::after {
-  content: "";
+.corner-cross-tr {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle 220px at var(--mx) var(--my), rgba(202, 31, 61, 0.18), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  top: -6px;
+  right: -6px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-metric);
+  user-select: none;
   pointer-events: none;
-}
-.premium-card-spot:hover::after { opacity: 1; }
-
-/* ── Typography ── */
-.title-gradient {
-  background: linear-gradient(135deg, #FFF 0%, #888 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-weight: 400;
 }
 
-.text-accent-gradient {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-lime) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.corner-cross-bl {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-metric);
+  user-select: none;
+  pointer-events: none;
+  font-weight: 400;
 }
 
-.text-accent-gradient-warm {
-  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--primary-glow) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.corner-cross-br {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-metric);
+  user-select: none;
+  pointer-events: none;
+  font-weight: 400;
 }
 
-.text-accent-cyan {
-  background: linear-gradient(135deg, #FFF 0%, var(--accent-cyan) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* ================================================
+   PIXEL ART & RENDERING
+   ================================================ */
+
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
 }
 
-.btn-phosphor {
-  background: var(--accent-lime) !important;
-  color: #08090C !important;
-  font-weight: 700 !important;
-  box-shadow: 0 0 20px rgba(212, 255, 0, 0.35);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.btn-phosphor:hover {
-  box-shadow: 0 0 35px rgba(212, 255, 0, 0.65);
-  transform: translateY(-2px);
-}
-
+/* Animación de marquesina cinemática técnica */
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -297,268 +351,30 @@ html.lenis, html.lenis body { height: auto; }
 .animate-marquee {
   display: flex;
   width: max-content;
-  animation: marquee 40s linear infinite;
+  animation: marquee 35s linear infinite;
 }
+
 .animate-marquee:hover {
   animation-play-state: paused;
 }
 
-/* ================================================
-   MODERN CONSOLE (reemplazo del CRT)
-   ================================================ */
-
-.modern-console {
-  background: rgba(14, 16, 23, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8), 0 30px 80px -20px rgba(0, 71, 255, 0.2);
-  font-family: var(--font-jetbrains), monospace;
-}
-
-.console-tab {
-  text-align: left;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  color: var(--text-muted);
-  border: 1px solid transparent;
-  transition: all 0.25s ease;
-  font-family: var(--font-jetbrains), monospace;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-}
-.console-tab:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
-.console-tab.active {
-  background: rgba(0, 71, 255, 0.18);
-  border-color: rgba(0, 240, 255, 0.45);
-  color: var(--text-main);
-  font-weight: 500;
-}
-.console-tab-index { color: var(--text-dim); font-size: 0.7rem; }
-.console-tab.active .console-tab-index { color: var(--accent-lime); }
-
-.console-output-card {
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: var(--font-jetbrains), monospace;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* ── Badges / pills ── */
-.glass-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
+/* Clases utilitarias brutas */
+.border-blueprint {
   border: 1px solid var(--surface-border);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-size: 0.75rem;
-  color: var(--text-muted);
 }
 
-.tag-pill {
-  display: inline-block;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.7rem;
-  color: var(--text-muted);
+.border-blueprint-b {
+  border-bottom: 1px solid var(--surface-border);
 }
 
-/* ── Section label ── */
-.sec-label {
-  display: block;
-  font-family: var(--font-jetbrains), monospace;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--secondary-glow);
-  margin-bottom: 0.75rem;
+.border-blueprint-t {
+  border-top: 1px solid var(--surface-border);
 }
 
-/* ── Separator ── */
-.glow-sep {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 71, 255, 0.4), rgba(212, 255, 0, 0.4), transparent);
+.border-blueprint-r {
+  border-right: 1px solid var(--surface-border);
 }
 
-/* ================================================
-   NEON TUBE SYSTEM (Gas Discharge & Luminous Conduits)
-   ================================================ */
-
-.neon-tube-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+.border-blueprint-l {
+  border-left: 1px solid var(--surface-border);
 }
-
-.neon-tube-rail {
-  position: relative;
-  width: 100%;
-  height: 3px;
-  background: #FFFFFF;
-  border-radius: 999px;
-  box-shadow: 
-    0 0 3px #FFFFFF,
-    0 0 10px var(--accent-cyan),
-    0 0 24px var(--primary-glow),
-    0 0 45px rgba(0, 71, 255, 0.65);
-  transition: all 0.3s ease;
-}
-
-.neon-tube-rail::before,
-.neon-tube-rail::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 10px;
-  background: #08090C;
-  border: 1.5px solid var(--accent-lime);
-  border-radius: 2px;
-  box-shadow: 0 0 10px rgba(212, 255, 0, 0.5);
-}
-
-.neon-tube-rail::before { left: -4px; }
-.neon-tube-rail::after { right: -4px; }
-
-/* Pulsing Neon Effect */
-.neon-pulse {
-  animation: neonHum 4s ease-in-out infinite alternate;
-}
-
-@keyframes neonHum {
-  0%, 100% {
-    opacity: 0.9;
-    filter: drop-shadow(0 0 5px var(--primary-glow)) drop-shadow(0 0 14px var(--secondary-glow));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 9px var(--primary-glow)) drop-shadow(0 0 24px var(--secondary-glow)) drop-shadow(0 0 40px rgba(202, 31, 61, 0.5));
-  }
-  75% {
-    opacity: 0.86;
-  }
-}
-
-/* Neon Conduits in SVG */
-.neon-path-core {
-  stroke: #ffffff;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  fill: none;
-}
-
-.neon-path-glow-amber {
-  stroke: var(--secondary-glow);
-  stroke-width: 5;
-  stroke-linecap: round;
-  fill: none;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 8px var(--secondary-glow)) drop-shadow(0 0 20px rgba(255, 190, 0, 0.65));
-}
-
-.neon-path-glow-crimson {
-  stroke: var(--primary-glow);
-  stroke-width: 5;
-  stroke-linecap: round;
-  fill: none;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 8px var(--primary-glow)) drop-shadow(0 0 22px rgba(202, 31, 61, 0.65));
-}
-
-/* ================================================
-   TOPOGRAPHIC CONTOUR LAYER (Isolines & Manifolds)
-   ================================================ */
-
-.topographic-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.contour-line {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.contour-line-accent {
-  stroke: rgba(255, 190, 0, 0.22);
-  stroke-dasharray: 4 6;
-}
-
-.contour-line-crimson {
-  stroke: rgba(202, 31, 61, 0.22);
-}
-
-.contour-label {
-  font-family: var(--font-jetbrains), monospace;
-  font-size: 8px;
-  letter-spacing: 2px;
-  fill: rgba(255, 255, 255, 0.35);
-  dominant-baseline: central;
-}
-
-/* ================================================
-   HALFTONE TEXTURE MATRIX (Tactile Micro-Contrast)
-   ================================================ */
-
-.halftone-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.14) 1.2px, transparent 1.2px);
-  background-size: 16px 16px;
-  background-position: 0 0;
-  opacity: 0.45;
-  mask-image: radial-gradient(ellipse 85% 65% at 50% 30%, black 20%, transparent 85%);
-  -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 30%, black 20%, transparent 85%);
-  mix-blend-mode: screen;
-}
-
-.halftone-accent-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255, 190, 0, 0.18) 1.5px, transparent 1.5px);
-  background-size: 22px 22px;
-  background-position: 11px 11px;
-  opacity: 0.35;
-  mask-image: radial-gradient(ellipse 55% 45% at 85% 25%, black 10%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 55% 45% at 85% 25%, black 10%, transparent 75%);
-}
-
-.halftone-card-surface {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 12px 12px;
-  opacity: 0.5;
-  pointer-events: none;
-  mask-image: linear-gradient(135deg, black 0%, transparent 60%);
-  -webkit-mask-image: linear-gradient(135deg, black 0%, transparent 60%);
-}
-
