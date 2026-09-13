@@ -221,11 +221,11 @@ function TechnicalHUD() {
         <div className="flex items-center gap-2.5 sm:gap-3">
           {/* WhatsApp Direct CTA */}
           <a
-            href="https://wa.me/5731086688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
+            href="https://wa.me/573108688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-brutalist-red !py-1.5 !px-3 sm:!px-4 !text-xs whitespace-nowrap flex items-center gap-1.5 shadow-[3px_3px_0px_#EDECE8]"
-            title="Contactar directamente por WhatsApp (+57 310 866 8648)"
+            title="Contactar directamente por WhatsApp (+57 310 868 8648)"
           >
             <span>INICIAR_PROYECTO</span>
             <span className="text-[10px] text-[#E7FF00] font-mono">[WA ↗]</span>
@@ -283,12 +283,12 @@ function TechnicalHUD() {
                 </div>
                 <div className="space-y-2">
                   <a
-                    href="https://wa.me/5731086688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
+                    href="https://wa.me/573108688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block p-2.5 bg-[#25D366]/15 border border-[#25D366] text-[#EDECE8] hover:bg-[#25D366] hover:text-black transition-colors font-bold no-underline"
                   >
-                    💬 WHATSAPP: +57 310 866 8648 ↗
+                    💬 WHATSAPP: +57 310 868 8648 ↗
                   </a>
                   <a
                     href="mailto:ssolucionesdeia@gmail.com"
@@ -355,7 +355,7 @@ function SuprematistHero() {
           {/* Brutalist Action Buttons */}
           <div className="pt-2 flex flex-wrap gap-4">
             <a
-              href="https://wa.me/5731086688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20una%20auditoria%20ejecutiva%20de%20IA"
+              href="https://wa.me/573108688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20una%20auditoria%20ejecutiva%20de%20IA"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-brutalist-red flex items-center gap-2"
@@ -1217,7 +1217,7 @@ function BlueprintPortfolioSection() {
           </p>
         </div>
         <a
-          href="https://wa.me/5731086688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
+          href="https://wa.me/573108688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
           target="_blank"
           rel="noopener noreferrer"
           className="btn-brutalist-canary shrink-0"
@@ -1499,8 +1499,8 @@ function IndustrialSpecificationFooter() {
                 </div>
                 <div>
                   <span className="text-[#6E7681] block">CANAL WHATSAPP:</span>
-                  <a href="https://wa.me/5731086688648" target="_blank" rel="noopener noreferrer" className="text-[#EDECE8] hover:text-[#E7FF00] no-underline">
-                    +57 310 866 8648 ↗
+                  <a href="https://wa.me/573108688648" target="_blank" rel="noopener noreferrer" className="text-[#EDECE8] hover:text-[#E7FF00] no-underline">
+                    +57 310 868 8648 ↗
                   </a>
                 </div>
                 <div>
@@ -1578,7 +1578,7 @@ function BrutalistWhatsAppFloatingBadge() {
   return (
     <aside aria-label="Contacto directo por WhatsApp" className="fixed bottom-5 right-5 z-50">
       <a
-        href="https://wa.me/5731086688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
+        href="https://wa.me/573108688648?text=Hola%20Soluciones%20de%20IA,%20deseo%20iniciar%20un%20proyecto%20de%20IA"
         target="_blank"
         rel="noopener noreferrer"
         className="group flex items-center gap-2.5 px-4 py-2.5 bg-[#0E1013]/95 backdrop-blur-md border-2 border-[#25D366] text-[#EDECE8] font-mono text-xs font-bold uppercase tracking-wider shadow-[4px_4px_0px_#25D366] hover:bg-[#25D366] hover:text-black hover:shadow-[2px_2px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 transition-all no-underline"
